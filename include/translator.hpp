@@ -28,13 +28,15 @@ class Translator{
 public:
     Translator(std::vector<uint8_t>& clientCache, std::vector<uint8_t>& targetCode);
     uint16_t getJMPAddress(uint16_t getStartingAddress);
-    void translateCurrentInstruction(uint16_t programCounter);
-
+    void translateBlock();
+    uint16_t blockProgramCounter;
+    uint32_t cyclesPassed;
+    bool jmpOccured;
 private:
     x86Emitter emitter;
     std::vector<uint8_t>& output;
     std::vector<uint8_t>& source;
-
+    void setSubFlag(bool flag);
     /*TODO: Implement GBZ instruction in x86 assembly.*/
     /* Source:
      * https://izik1.github.io/gbops/

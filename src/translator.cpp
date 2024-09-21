@@ -1,23 +1,25 @@
 #include <translator.hpp>
 
 Translator::Translator(std::vector<uint8_t>& clientCache, std::vector<uint8_t>& targetCode):
-    output(clientCache), emitter(clientCache), source(targetCode)
+    output(clientCache), emitter(clientCache), source(targetCode), cyclesPassed(0), jmpOccured(false)
 {
 
 }
 
-uint16_t Translator::getJMPAddress(uint16_t getStartingAddress)
+void Translator::translateBlock()
 {
-    /*TODO:*/
-    return 0;
+    do{
+        const uint8_t opcode = source[blockProgramCounter++];
+        if(opcode == 0xCB)
+            decodeAndRunCB(opcode);
+        else
+            decodeAndRun(opcode);
+    }while(blockProgramCounter < source.size()/**!jmpOccured**/);
 }
 
-void Translator::translateCurrentInstruction(uint16_t programCounter)
+void Translator::setSubFlag(bool flag)
 {
-    if(source[programCounter] == 0xCB)
-        decodeAndRunCB(source[programCounter]);
-    else
-        decodeAndRun(source[programCounter]);
+    emitter.mov16immTo16r(x86_16(DI), flag);
 }
 
 void Translator::decodeAndRun(uint8_t opcode)
@@ -45,7 +47,7 @@ void Translator::decodeAndRun(uint8_t opcode)
 
         case 1: switch(q){
             case 0: ld_rp_nn(gbz80::rp(p));break;
-            case 2: add_hl_rp(gbz80::rp(p));break;
+            case 1: add_hl_rp(gbz80::rp(p));break;
             }break;
 
         case 2:
@@ -110,7 +112,7 @@ void Translator::decodeAndRun(uint8_t opcode)
     case 3:
         switch(z){
         case 0: switch(y){
-            case 0:case 1: case 2: case 3:
+            case 0 ... 3:
                 ret_cc(y); break;
             case 4: ld_indirect_0xff00Plusn8_a(); break;
             case 5: add_sp_immediate(); break;
@@ -131,7 +133,7 @@ void Translator::decodeAndRun(uint8_t opcode)
             }
         }break;
         case 2: switch(y){
-            case 0: case 1: case 2: case 3:
+            case 0 ... 3:
                 jp_cc_nn(y); break;
             case 4: ld_indirect_nnPlusC_a(); break;
             case 5: ld_indirect_nn_a(); break;
