@@ -1,7 +1,5 @@
-#include <translator.hpp>
+#include "translator.hpp"
 
-
-using op = Translator;
 
 x86_8 mapR8(gbz80::r r)
 {
@@ -33,33 +31,33 @@ x86_16 mapR16(gbz80::rp rp)
 }
 
 
-void op::nop()
+void Translator::nop()
 {
     cyclesPassed++;
 }
 
 
-void op::ld_nnPtr_sp()
+void Translator::ld_nnPtr_sp()
 {
 
 }
 
-void op::stop()
+void Translator::stop()
 {
 
 }
 
-void op::jr(gbz80::r relative)
+void Translator::jr(gbz80::r relative)
 {
 
 }
 
-void op::jr_cc(gbz80::r relative, uint8_t cc)
+void Translator::jr_cc(gbz80::r relative, uint8_t cc)
 {
 
 }
 
-void op::ld_rp_nn(gbz80::rp dest)
+void Translator::ld_rp_nn(gbz80::rp dest)
 {
     const uint16_t imm16 = source[blockProgramCounter] | (source[blockProgramCounter + 1] << 8);
     emitter.mov16immTo16r(mapR16(dest), imm16);
@@ -67,7 +65,7 @@ void op::ld_rp_nn(gbz80::rp dest)
     cyclesPassed += 3;
 }
 
-void op::add_hl_rp(gbz80::rp src)
+void Translator::add_hl_rp(gbz80::rp src)
 {
     /*
      * This instruction sets the half carry flag when overflow is generated from bit 11.
@@ -77,10 +75,10 @@ void op::add_hl_rp(gbz80::rp src)
     emitter.lahf();
     emitter.push16r(x86_16::AX);
     emitter.mov16rTo16r(x86_16::AX, mapR16(src));
-    emitter.add8r8r(mapR8(gbz80::L), x86_8::AL);
-    emitter.adc8r8r(mapR8(gbz80::H), x86_8::AH);
+    emitter.arithmetic8r8r(mapR8(gbz80::L), x86_8::AL, ADD);
+    emitter.arithmetic8r8r(mapR8(gbz80::H), x86_8::AH, ADC);
     emitter.lahf();
-    emitter.andr8imm8(x86_8::AH, 0b10001);
+    emitter.arithmetic8r8imm(x86_8::AH, 0b10001, AND);
     emitter.orStack8r8(0, x86_8::AH);
     emitter.pop16r(x86_16::AX);
     emitter.sahf();
@@ -88,391 +86,367 @@ void op::add_hl_rp(gbz80::rp src)
     cyclesPassed += 2;
 }
 
-void op::inc_rp(gbz80::rp reg)
+void Translator::inc_rp(gbz80::rp reg)
 {
     emitter.unary16r(mapR16(reg), inc);
     cyclesPassed += 2;
 }
 
-void op::dec_rp(gbz80::rp reg)
+void Translator::dec_rp(gbz80::rp reg)
 {
     emitter.unary16r(mapR16(reg), dec);
     cyclesPassed += 2;
 }
 
-void op::inc_r(gbz80::r reg)
+void Translator::inc_r(gbz80::r reg)
 {
     emitter.unary8r(mapR8(reg), inc);
     cyclesPassed++;
 }
 
-void op::dec_r(gbz80::r reg)
+void Translator::dec_r(gbz80::r reg)
 {
     emitter.unary8r(mapR8(reg), dec);
     cyclesPassed++;
 }
 
-void op::ld_r_n(gbz80::r dest)
+void Translator::ld_r_n(gbz80::r dest)
 {
     const uint8_t imm8 = source[blockProgramCounter++];
     emitter.mov8immTo8r(mapR8(dest), imm8);
     cyclesPassed += 2;
 }
 
-void op::rlca()
+void Translator::rlca()
 {
 
 }
 
-void op::rrca()
+void Translator::rrca()
 {
 
 }
 
-void op::rla()
+void Translator::rla()
 {
 
 }
 
-void op::rra()
+void Translator::rra()
 {
 
 }
 
-void op::dda()
+void Translator::dda()
 {
 
 }
 
-void op::cpl()
+void Translator::cpl()
 {
 
 }
 
-void op::scf()
+void Translator::scf()
 {
 
 }
 
-void op::ccf()
+void Translator::ccf()
 {
 
 }
 
-void op::halt()
+void Translator::halt()
 {
 
 }
 
-void op::ld_r_r(gbz80::r dest, gbz80::r src)
+void Translator::ld_r_r(gbz80::r dest, gbz80::r src)
 {
     emitter.mov8rTo8r(mapR8(dest), mapR8(src));
     cyclesPassed += 2;
 }
 
 
-void op::ld_rp_indirect(gbz80::rp dest, gbz80::r src)
+void Translator::ld_rp_indirect(gbz80::rp dest, gbz80::r src)
 {
 
 }
 
-void op::ldi_hl_indirect(gbz80::r src)
-{
-
-}
-
-
-void op::ldd_hl_indirect(gbz80::r src)
-{
-
-}
-
-void op::ld_a_rpIndirect(gbz80::rp src)
-{
-
-}
-
-void op::ldi_a_hl_indirect()
-{
-
-}
-
-void op::ldd_a_hl_indirect()
+void Translator::ldi_hl_indirect(gbz80::r src)
 {
 
 }
 
 
-void op::add_a(gbz80::r src)
+void Translator::ldd_hl_indirect(gbz80::r src)
 {
-    emitter.add8r8r(mapR8(gbz80::A), mapR8(src));
+
+}
+
+void Translator::ld_a_rpIndirect(gbz80::rp src)
+{
+
+}
+
+void Translator::ldi_a_hl_indirect()
+{
+
+}
+
+void Translator::ldd_a_hl_indirect()
+{
+
+}
+
+
+void Translator::add_a(gbz80::r src)
+{
+    emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(src), ADD);
     cyclesPassed++;
     setSubFlag(0);
+    cyclesPassed++;
 }
 
-void op::adc_a(gbz80::r src)
+void Translator::adc_a(gbz80::r src)
 {
-    emitter.adc8r8r(mapR8(gbz80::A), mapR8(src));
+    emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(src), ADC);
     cyclesPassed++;
     setSubFlag(0);
+    cyclesPassed++;
 }
 
-void op::sub_a(gbz80::r reg)
+void Translator::sub_a(gbz80::r src)
+{
+    emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(src), SUB);
+    cyclesPassed++;
+    setSubFlag(1);
+    cyclesPassed++;
+}
+
+void Translator::sbc_a(gbz80::r src)
+{
+    emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(src), SBB);
+    cyclesPassed++;
+    setSubFlag(1);
+    cyclesPassed++;
+}
+
+void Translator::and_a(gbz80::r reg)
+{
+    emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(reg), AND);
+    cyclesPassed++;
+    setSubFlag(0);
+    cyclesPassed++;
+}
+
+void Translator::xor_a(gbz80::r reg)
+{
+    emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(reg), XOR);
+    cyclesPassed++;
+    setSubFlag(0);
+    cyclesPassed++;
+}
+
+void Translator::or_a(gbz80::r reg)
+{
+    emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(reg), OR);
+    cyclesPassed++;
+    setSubFlag(0);
+    cyclesPassed++;
+}
+
+void Translator::cp_a(gbz80::r reg)
 {
 
 }
 
-void op::sbc_a(gbz80::r reg)
+void Translator::ld_indirect_0xff00Plusn8_a()
 {
 
 }
 
-void op::and_a(gbz80::r reg)
+void Translator::add_sp_immediate()
 {
 
 }
 
-void op::xor_a(gbz80::r reg)
+void Translator::ld_a_indirect_0xff00Plusn8()
 {
 
 }
 
-void op::or_a(gbz80::r reg)
+void Translator::ld_hl_sp_plus_d()
 {
 
 }
 
-void op::cp_a(gbz80::r reg){
-
-
-}
-
-void op::ld_indirect_0xff00Plusn8_a()
+void Translator::ret_cc(uint8_t cc)
 {
 
 }
 
-void op::add_sp_immediate()
+void Translator::ret()
 {
 
 }
 
-void op::ld_a_indirect_0xff00Plusn8()
+void Translator::reti()
 {
 
 }
 
-void op::ld_hl_sp_plus_d()
+void Translator::jp_hl()
 {
 
 }
 
-void op::ret_cc(uint8_t cc)
+void Translator::ld_sp_hl()
 {
 
 }
 
-void op::ret()
-{
-
-}
-
-void op::reti()
-{
-
-}
-
-void op::jp_hl()
-{
-
-}
-
-void op::ld_sp_hl()
-{
-
-}
-
-void op::jp_cc_nn(uint8_t cc)
-{
-
-}
-
-
-void op::ld_indirect_nnPlusC_a()
-{
-
-}
-
-void op::ld_indirect_nn_a()
-{
-
-}
-
-void op::ld_a_indirect_0xff00PlusC()
-{
-
-}
-
-void op::ld_a_indirect_nn()
-{
-
-}
-
-void op::pop_rp2(gbz80::rp2::reg reg)
+void Translator::jp_cc_nn(uint8_t cc)
 {
 
 }
 
 
-void op::jp_nn()
+void Translator::ld_indirect_nnPlusC_a()
 {
 
 }
 
-void op::di()
+void Translator::ld_indirect_nn_a()
 {
 
 }
 
-void op::ei()
+void Translator::ld_a_indirect_0xff00PlusC()
 {
 
 }
 
-void op::call_cc_nn(uint8_t cc)
-{
-
-}
-void op::push_rp2(gbz80::rp2::reg reg)
+void Translator::ld_a_indirect_nn()
 {
 
 }
 
-void op::call_nn()
+void Translator::pop_rp2(gbz80::rp2::reg reg)
 {
 
 }
 
-void op::add_a_imm()
+
+void Translator::jp_nn()
+{
+
+}
+
+void Translator::di()
+{
+
+}
+
+void Translator::ei()
+{
+
+}
+
+void Translator::call_cc_nn(uint8_t cc)
+{
+
+}
+void Translator::push_rp2(gbz80::rp2::reg reg)
+{
+
+}
+
+void Translator::call_nn()
+{
+
+}
+
+void Translator::add_a_imm()
 {
     const uint8_t imm8 = source[blockProgramCounter++];
-    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, Add);
+    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, ADD);
     setSubFlag(0);
     cyclesPassed += 2;
 }
 
-void op::adc_a_imm()
+void Translator::adc_a_imm()
 {
     const uint8_t imm8 = source[blockProgramCounter++];
-    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, Adc);
+    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, ADC);
     setSubFlag(0);
     cyclesPassed += 2;
 }
 
-void op::sub_a_imm()
+void Translator::sub_a_imm()
 {
     const uint8_t imm8 = source[blockProgramCounter++];
-    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, Sub);
+    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, SUB);
     setSubFlag(1);
     cyclesPassed += 2;
 }
 
-void op::sbc_a_imm()
+void Translator::sbc_a_imm()
 {
     const uint8_t imm8 = source[blockProgramCounter++];
-    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, Sbb);
+    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, SBB);
     setSubFlag(1);
     cyclesPassed += 2;
 }
 
-void op::and_a_imm()
+void Translator::and_a_imm()
 {
     const uint8_t imm8 = source[blockProgramCounter++];
-    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, And);
+    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, AND);
     setSubFlag(0);
     cyclesPassed += 2;
 }
 
-void op::xor_a_imm()
+void Translator::xor_a_imm()
 {
     const uint8_t imm8 = source[blockProgramCounter++];
-    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, Xor);
+    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, XOR);
     setSubFlag(0);
     cyclesPassed += 2;
 
 }
 
-void op::or_a_imm()
+void Translator::or_a_imm()
 {
     const uint8_t imm8 = source[blockProgramCounter++];
-    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, Or);
+    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, OR);
     setSubFlag(0);
     cyclesPassed += 2;
 }
 
-void op::cp_a_imm()
+void Translator::cp_a_imm()
 {
 
 }
 
-void op::rst(uint8_t vec)
+void Translator::rst(uint8_t vec)
 {
 
 }
 
-void op::bit(uint8_t u3, gbz80::r target)
+void Translator::bit(uint8_t u3, gbz80::r target)
 {
 
 }
 
-void op::res(uint8_t u3, gbz80::r target)
+void Translator::res(uint8_t u3, gbz80::r target)
 {
 
 }
 
-void op::set(uint8_t u3, gbz80::r target)
+void Translator::set(uint8_t u3, gbz80::r target)
 {
 
 }
 
-
-
-void op::rlc(gbz80::r target)
-{
-
-}
-
-void op::rrc(gbz80::r target)
-{
-
-}
-
-void op::rl(gbz80::r target)
-{
-
-}
-
-void op::rr(gbz80::r target)
-{
-
-}
-
-void op::sla(gbz80::r target)
-{
-
-}
-
-void op::swap(gbz80::r target)
-{
-
-}
-
-void op::srl(gbz80::r target)
-{
-
-}
-
-void op::sra(gbz80::r target)
-{
-
-}

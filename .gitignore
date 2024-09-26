@@ -5,3 +5,6 @@ build/
 Makefile
 CMakeFiles
 .vs/
+out/
+CMakeSettings.json
+
