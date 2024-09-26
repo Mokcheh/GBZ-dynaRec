@@ -22,9 +22,7 @@ enum x86_64: uint8_t{
 };
 
 enum mod: uint8_t{RtoM = 0b00, RtoMdisp8 = 0b01, RtoMdisp32 = 0b10, RtoR = 0b11};
-
 enum unary: bool{inc = 0, dec = 1};
-//enum arithmetic: uint8_t{Add = 0, Adc = 2, Sub = 5, Sbb = 3, And = 4, Xor = 6,  Or = 1};
 enum arithmetic: uint8_t{ADD, OR, ADC, SBB, AND, SUB, XOR, CMP};
 
 
@@ -36,17 +34,14 @@ public:
     void mov16immTo16r(x86_16 r16, uint16_t imm16);
     void mov16rTo16r(x86_16 dest, x86_16 src);
     void mov8rTo8r(x86_8 dest, x86_8 src);
-    void unary8r(x86_8 r8, unary op);
+    void unary8r(x86_8 r8, unary op); 
     void unary16r(x86_16 r16, unary op);
     void arithmetic8r8imm(x86_8 dest, uint8_t imm8, arithmetic op);
     void arithmetic8r8r(x86_8 dest, x86_8 src, arithmetic op);
     void add16r16r(x86_16 dest, x86_16 src);
-    void push16r(x86_16 reg);
-    void pop16r(x86_16 reg);
-    void lahf();
-    void sahf();
+    void push16r(x86_16 reg); void pop16r(x86_16 reg);
+    void lahf(); void sahf();
     void orStack8r8(uint8_t offset, x86_8 src);
-    //void inc8m(x86_16 r16);
 private:
     void emitByte(uint8_t byte);
     void emitWord(uint16_t word);

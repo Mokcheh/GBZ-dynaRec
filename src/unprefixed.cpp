@@ -26,6 +26,7 @@ x86_16 mapR16(gbz80::rp rp)
     case rp::DE: reg = x86_16::BX; break;
     case rp::HL: reg = x86_16::DX; break;
     case rp::SP: reg = x86_16::SI; break;
+    default: break;
     }
     return reg;
 }
@@ -206,7 +207,6 @@ void Translator::add_a(gbz80::r src)
     emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(src), ADD);
     cyclesPassed++;
     setSubFlag(0);
-    cyclesPassed++;
 }
 
 void Translator::adc_a(gbz80::r src)
@@ -214,7 +214,6 @@ void Translator::adc_a(gbz80::r src)
     emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(src), ADC);
     cyclesPassed++;
     setSubFlag(0);
-    cyclesPassed++;
 }
 
 void Translator::sub_a(gbz80::r src)
@@ -222,7 +221,6 @@ void Translator::sub_a(gbz80::r src)
     emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(src), SUB);
     cyclesPassed++;
     setSubFlag(1);
-    cyclesPassed++;
 }
 
 void Translator::sbc_a(gbz80::r src)
@@ -230,7 +228,6 @@ void Translator::sbc_a(gbz80::r src)
     emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(src), SBB);
     cyclesPassed++;
     setSubFlag(1);
-    cyclesPassed++;
 }
 
 void Translator::and_a(gbz80::r reg)
@@ -238,7 +235,6 @@ void Translator::and_a(gbz80::r reg)
     emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(reg), AND);
     cyclesPassed++;
     setSubFlag(0);
-    cyclesPassed++;
 }
 
 void Translator::xor_a(gbz80::r reg)
@@ -246,7 +242,6 @@ void Translator::xor_a(gbz80::r reg)
     emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(reg), XOR);
     cyclesPassed++;
     setSubFlag(0);
-    cyclesPassed++;
 }
 
 void Translator::or_a(gbz80::r reg)
@@ -254,7 +249,6 @@ void Translator::or_a(gbz80::r reg)
     emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(reg), OR);
     cyclesPassed++;
     setSubFlag(0);
-    cyclesPassed++;
 }
 
 void Translator::cp_a(gbz80::r reg)
