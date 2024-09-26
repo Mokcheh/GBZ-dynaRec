@@ -253,7 +253,9 @@ void Translator::or_a(gbz80::r reg)
 
 void Translator::cp_a(gbz80::r reg)
 {
-
+    emitter.arithmetic8r8r(mapR8(gbz80::A), mapR8(reg), CMP);
+    cyclesPassed++;
+    setSubFlag(1);
 }
 
 void Translator::ld_indirect_0xff00Plusn8_a()
