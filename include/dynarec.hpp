@@ -21,7 +21,9 @@ private:
 
 class Cache{
 public:
-    Cache():runX86(nullptr){};
+    Cache():
+        runX86(nullptr), cycles(0), targetStartingAddress(0), targetEndingAddress(0), sizeRounded(0)
+        {};
     ~Cache();
     std::vector<uint8_t> x86;
     uint16_t targetStartingAddress;
@@ -31,5 +33,5 @@ public:
 private:
     void* generateExecutableCode(const uint16_t* state);
     void* runX86;
-    size_t sizeRounded;
+    uint32_t sizeRounded;
 };

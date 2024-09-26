@@ -10,5 +10,3 @@ file(GLOB SOURCES src/*.cpp src/x86/*.cpp include/*.hpp)
 
 add_executable(interpreter ${SOURCES})
 include_directories(include/)
-
-target_compile_options(interpreter PUBLIC -masm=intel)

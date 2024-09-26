@@ -112,7 +112,7 @@ void Translator::decodeAndRun(uint8_t opcode)
     case 3:
         switch(z){
         case 0: switch(y){
-            case 0 ... 3:
+        case 0: case 1: case 2: case 3:
                 ret_cc(y); break;
             case 4: ld_indirect_0xff00Plusn8_a(); break;
             case 5: add_sp_immediate(); break;
@@ -133,7 +133,7 @@ void Translator::decodeAndRun(uint8_t opcode)
             }
         }break;
         case 2: switch(y){
-            case 0 ... 3:
+        case 0: case 1: case2: case 3:
                 jp_cc_nn(y); break;
             case 4: ld_indirect_nnPlusC_a(); break;
             case 5: ld_indirect_nn_a(); break;
