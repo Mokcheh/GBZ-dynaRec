@@ -24,7 +24,11 @@ void Translator::rr(gbz80::r target)
 void Translator::sla(gbz80::r target)
 {
     emitter.shift8r(mapR8(target), 1, LEFT);
-    //Uncomplete
+    emitter.lahf();
+    emitter.arithmetic8r8imm(x86_8::AH, CF + ZF, AND);
+    emitter.sahf();
+    setSubFlag(0);
+    cyclesPassed += 2;
 }
 
 void Translator::swap(gbz80::r target)
@@ -34,12 +38,24 @@ void Translator::swap(gbz80::r target)
 
 void Translator::srl(gbz80::r target)
 {
-
+    emitter.shift8r(mapR8(target), 1, RIGHT);
+    emitter.lahf();
+    emitter.arithmetic8r8imm(x86_8::AH, CF + ZF, AND);
+    emitter.sahf();
+    setSubFlag(0);
+    cyclesPassed += 2;
 }
 
 void Translator::sra(gbz80::r target)
 {
-
+    emitter.push16r(x86_16::AX);
+    emitter.mov8rTo8r(x86_8::AL, mapR8(target));
+    emitter.arithmetic8r8imm(x86_8::AL, 1, AND);
+    emitter.arithmetic8r8imm(x86_8::AH, ~CF, AND);
+    emitter.arithmetic8r8r(x86_8::AH, x86_8::AL, OR);
+    emitter.pop16r(x86_16::AX);
+    setSubFlag(0);
+    cyclesPassed += 2;
 }
 
 void Translator::bit(uint8_t u3, gbz80::r target)

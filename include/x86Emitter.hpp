@@ -56,3 +56,4 @@ private:
 };
 
 
+enum eflags{CF = 0b1, AF = 0b10000, ZF = 0b1000000};
