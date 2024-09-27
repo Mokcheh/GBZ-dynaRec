@@ -37,6 +37,8 @@ private:
     std::vector<uint8_t>& output;
     std::vector<uint8_t>& source;
     void setSubFlag(bool flag);
+    x86_8 mapR8(gbz80::r r);
+    x86_16 mapR16(gbz80::rp rp);
     /*TODO: Implement GBZ instruction in x86 assembly.*/
     /* Source:
      * https://izik1.github.io/gbops/
@@ -75,7 +77,7 @@ private:
     void cp_a(gbz80::r reg);
     void ret_cc(uint8_t cc);
     void ld_indirect_0xff00Plusn8_a();
-    void add_sp_immediate();
+    void add_sp_e8();
     void ld_a_indirect_0xff00Plusn8();
     void ld_hl_sp_plus_d();
     void pop_rp2(gbz80::rp2::reg reg);

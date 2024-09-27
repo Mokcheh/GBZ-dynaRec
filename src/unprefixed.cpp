@@ -1,36 +1,6 @@
 #include "translator.hpp"
 
 
-x86_8 mapR8(gbz80::r r)
-{
-    x86_8 reg;
-    using namespace gbz80;
-    switch(r){
-    case A: reg = x86_8::AL; break;
-    case B: reg = x86_8::CH; break;
-    case C: reg = x86_8::CL; break;
-    case D: reg = x86_8::BH; break;
-    case E: reg = x86_8::BL; break;
-    case H: reg = x86_8::DH; break;
-    case L: reg = x86_8::DL; break;
-    default: reg = x86_8::AH; break;
-    }
-    return reg;
-}
-x86_16 mapR16(gbz80::rp rp)
-{
-    x86_16 reg;
-    using namespace gbz80;
-    switch(rp){
-    case rp::BC: reg = x86_16::CX; break;
-    case rp::DE: reg = x86_16::BX; break;
-    case rp::HL: reg = x86_16::DX; break;
-    case rp::SP: reg = x86_16::SI; break;
-    default: break;
-    }
-    return reg;
-}
-
 
 void Translator::nop()
 {
@@ -145,17 +115,32 @@ void Translator::dda()
 
 void Translator::cpl()
 {
-
+    emitter.lahf();
+    emitter.not8r(mapR8(gbz80::A));
+    emitter.arithmetic8r8imm(x86_8::AH, 0b10000, OR);
+    emitter.sahf();
+    setSubFlag(1);
+    cyclesPassed++;
 }
 
 void Translator::scf()
 {
-
+    emitter.stc();
+    emitter.lahf();
+    emitter.arithmetic8r8imm(x86_8::AH, 1, AND);
+    emitter.sahf();
+    setSubFlag(0);
+    cyclesPassed++;
 }
 
 void Translator::ccf()
 {
-
+    emitter.cmc();
+    emitter.lahf();
+    emitter.arithmetic8r8imm(x86_8::AH, 1, AND);
+    emitter.sahf();
+    setSubFlag(0);
+    cyclesPassed++;
 }
 
 void Translator::halt()
@@ -263,9 +248,13 @@ void Translator::ld_indirect_0xff00Plusn8_a()
 
 }
 
-void Translator::add_sp_immediate()
+void Translator::add_sp_e8()
 {
-
+    //TODO: this instruction segfaults for some reason
+    int8_t e8 = source[blockProgramCounter++];
+    emitter.arithmetic16r16imm(mapR16(gbz80::SP), e8, ADD);
+    setSubFlag(0);
+    cyclesPassed += 4;
 }
 
 void Translator::ld_a_indirect_0xff00Plusn8()
@@ -423,26 +412,13 @@ void Translator::or_a_imm()
 
 void Translator::cp_a_imm()
 {
-
+    const uint8_t imm8 = source[blockProgramCounter++];
+    emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, CMP);
+    setSubFlag(1);
+    cyclesPassed += 2;
 }
 
 void Translator::rst(uint8_t vec)
 {
 
 }
-
-void Translator::bit(uint8_t u3, gbz80::r target)
-{
-
-}
-
-void Translator::res(uint8_t u3, gbz80::r target)
-{
-
-}
-
-void Translator::set(uint8_t u3, gbz80::r target)
-{
-
-}
-

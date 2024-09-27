@@ -6,6 +6,7 @@
 #ifdef __linux__ 
 #include <unistd.h>
 #include <sys/mman.h>
+
 #elif _WIN32
 #include <windows.h>
 #include <memoryapi.h>
@@ -18,6 +19,7 @@
 dynaRec::dynaRec(std::vector<uint8_t>& targetCode): targetCode(targetCode)
 {
     registerState.fill(0);
+    registerState[3] = 15;
 }
 
 void dynaRec::buildCache(Cache& cache, uint16_t targetStartingAddress)

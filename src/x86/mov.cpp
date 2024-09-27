@@ -26,13 +26,3 @@ void x86Emitter::mov8rTo8r(x86_8 dest, x86_8 src)
     emitByte(0x88);
     modRM(mod::RtoR, src, dest);
 }
-
-void x86Emitter::lahf()
-{
-    emitByte(0x9F);
-}
-
-void x86Emitter::sahf()
-{
-    emitByte(0x9E);
-}

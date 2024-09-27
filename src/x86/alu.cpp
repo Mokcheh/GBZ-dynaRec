@@ -28,10 +28,31 @@ void x86Emitter::arithmetic8r8r(x86_8 dest, x86_8 src, arithmetic op)
     modRM(mod::RtoR, src, dest);
 }
 
+void x86Emitter::arithmetic16r16imm(x86_16 dest, uint16_t imm16, arithmetic op)
+{
+    emitByte(0x81);
+    modRM(mod::RtoR, op, dest);
+    emitWord(imm16);
+}
+
 
 void x86Emitter::add16r16r(x86_16 dest, x86_16 src)
 {
     emitByte(0x66);
     emitByte(0x01);
     modRM(mod::RtoR, src, dest);
+}
+
+void x86Emitter::not8r(x86_8 reg)
+{
+    emitByte(0xF6);
+    modRM(mod::RtoR, 2, reg);
+}
+
+
+void x86Emitter::shift8r(x86_8 target, uint8_t units, shift direction)
+{
+    emitByte(0xC0);
+    modRM(mod::RtoR, direction, target);
+    emitByte(units);
 }

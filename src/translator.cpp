@@ -22,6 +22,38 @@ void Translator::setSubFlag(bool flag)
     emitter.mov16immTo16r(x86_16(DI), flag);
 }
 
+
+x86_8 Translator::mapR8(gbz80::r r)
+{
+    x86_8 reg;
+    using namespace gbz80;
+    switch (r) {
+    case A: reg = x86_8::AL; break;
+    case B: reg = x86_8::CH; break;
+    case C: reg = x86_8::CL; break;
+    case D: reg = x86_8::BH; break;
+    case E: reg = x86_8::BL; break;
+    case H: reg = x86_8::DH; break;
+    case L: reg = x86_8::DL; break;
+    default: reg = x86_8::AH; break;
+    }
+    return reg;
+}
+x86_16 Translator::mapR16(gbz80::rp rp)
+{
+    x86_16 reg;
+    using namespace gbz80;
+    switch (rp) {
+    case rp::BC: reg = x86_16::CX; break;
+    case rp::DE: reg = x86_16::BX; break;
+    case rp::HL: reg = x86_16::DX; break;
+    case rp::SP: reg = x86_16::SI; break;
+    default: break;
+    }
+    return reg;
+}
+
+
 void Translator::decodeAndRun(uint8_t opcode)
 {
     /*
@@ -115,7 +147,7 @@ void Translator::decodeAndRun(uint8_t opcode)
         case 0: case 1: case 2: case 3:
                 ret_cc(y); break;
             case 4: ld_indirect_0xff00Plusn8_a(); break;
-            case 5: add_sp_immediate(); break;
+            case 5: add_sp_e8(); break;
             case 6: ld_a_indirect_0xff00Plusn8(); break;
             case 7: ld_hl_sp_plus_d(); break;
             }break;
