@@ -44,6 +44,7 @@ public:
     void push16r(x86_16 reg); void pop16r(x86_16 reg);
     void lahf(); void sahf();
     void orStack8r8(uint8_t offset, x86_8 src);
+    void mov8rToStack8(uint8_t offset, x86_8 src);
     void cmc(); void stc();
     void not8r(x86_8 reg);
     void shift8r(x86_8 target, uint8_t units, shift direction);

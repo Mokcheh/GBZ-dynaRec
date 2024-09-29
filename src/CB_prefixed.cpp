@@ -48,14 +48,28 @@ void Translator::srl(gbz80::r target)
 
 void Translator::sra(gbz80::r target)
 {
-    emitter.push16r(x86_16::AX);
-    emitter.mov8rTo8r(x86_8::AL, mapR8(target));
-    emitter.arithmetic8r8imm(x86_8::AL, 1, AND);
-    emitter.arithmetic8r8imm(x86_8::AH, ~CF, AND);
-    emitter.arithmetic8r8r(x86_8::AH, x86_8::AL, OR);
-    emitter.pop16r(x86_16::AX);
+    x86_16 container;
+    x86_8 containerLow;
+    if (target == gbz80::A)
+    {
+        container = x86_16::BX;
+        containerLow = x86_8::BL;
+    }
+    else
+    {
+        container = x86_16::AX;
+        containerLow = x86_8::AL;
+    }
+    emitter.push16r(container);
+    emitter.mov8rTo8r(containerLow, mapR8(target));
+    emitter.shift8r(mapR8(target), 1, RIGHT);
+    emitter.lahf();
+    emitter.arithmetic8r8imm(x86_8::AH, ZF + CF, AND);
+    emitter.arithmetic8r8imm(containerLow, 0b10000000, AND);
+    emitter.arithmetic8r8r(mapR8(target), containerLow, OR);
+    emitter.pop16r(container);
+    emitter.sahf();
     setSubFlag(0);
-    cyclesPassed += 2;
 }
 
 void Translator::bit(uint8_t u3, gbz80::r target)

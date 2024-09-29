@@ -20,3 +20,11 @@ void x86Emitter::orStack8r8(uint8_t offset, x86_8 src)
     sib(0, 100, RSP);
     emitByte(offset);
 }
+
+void x86Emitter::mov8rToStack8(uint8_t offset, x86_8 src)
+{
+    emitByte(0x88);
+    modRM(mod::RtoMdisp8, src, SIB);
+    sib(0, 100, RSP);
+    emitByte(offset);
+}

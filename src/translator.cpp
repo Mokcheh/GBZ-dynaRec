@@ -9,9 +9,11 @@ Translator::Translator(std::vector<uint8_t>& clientCache, std::vector<uint8_t>& 
 void Translator::translateBlock()
 {
     do{
-        const uint8_t opcode = source[blockProgramCounter++];
-        if(opcode == 0xCB)
+        uint8_t opcode = source[blockProgramCounter++];
+        if (opcode == 0xCB) {
+            opcode = source[blockProgramCounter++];
             decodeAndRunCB(opcode);
+        }
         else
             decodeAndRun(opcode);
     }while(blockProgramCounter < source.size()/**!jmpOccured**/);

@@ -50,7 +50,7 @@ void Translator::add_hl_rp(gbz80::rp src)
     emitter.arithmetic8r8r(mapR8(gbz80::H), x86_8::AH, ADC);
     emitter.lahf();
     emitter.arithmetic8r8imm(x86_8::AH, 0b10001, AND);
-    emitter.orStack8r8(0, x86_8::AH);
+    emitter.orStack8r8(1, x86_8::AH);
     emitter.pop16r(x86_16::AX);
     emitter.sahf();
     setSubFlag(0);
@@ -117,7 +117,7 @@ void Translator::cpl()
 {
     emitter.lahf();
     emitter.not8r(mapR8(gbz80::A));
-    emitter.arithmetic8r8imm(x86_8::AH, 0b10000, OR);
+    emitter.arithmetic8r8imm(x86_8::AH, AF, OR);
     emitter.sahf();
     setSubFlag(1);
     cyclesPassed++;
@@ -127,7 +127,7 @@ void Translator::scf()
 {
     emitter.stc();
     emitter.lahf();
-    emitter.arithmetic8r8imm(x86_8::AH, 1, AND);
+    emitter.arithmetic8r8imm(x86_8::AH, CF, AND);
     emitter.sahf();
     setSubFlag(0);
     cyclesPassed++;
@@ -137,7 +137,7 @@ void Translator::ccf()
 {
     emitter.cmc();
     emitter.lahf();
-    emitter.arithmetic8r8imm(x86_8::AH, 1, AND);
+    emitter.arithmetic8r8imm(x86_8::AH, CF, AND);
     emitter.sahf();
     setSubFlag(0);
     cyclesPassed++;
