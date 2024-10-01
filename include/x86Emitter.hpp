@@ -24,8 +24,10 @@ enum x86_64: uint8_t{
 enum mod: uint8_t{RtoM = 0b00, RtoMdisp8 = 0b01, RtoMdisp32 = 0b10, RtoR = 0b11};
 enum unary: bool{inc = 0, dec = 1};
 enum arithmetic: uint8_t{ADD, OR, ADC, SBB, AND, SUB, XOR, CMP};
-enum shift: uint8_t{LEFT = 4, RIGHT = 5};
 
+enum class shift : uint8_t { LEFT = 4, RIGHT = 5 };
+
+enum class rotate : uint8_t { LEFT = 0, RIGHT = 1 };
 
 class x86Emitter{
 public:
@@ -48,6 +50,7 @@ public:
     void cmc(); void stc();
     void not8r(x86_8 reg);
     void shift8r(x86_8 target, uint8_t units, shift direction);
+    void rotate8r(x86_8 target, uint8_t offset, rotate op);
 private:
     void emitByte(uint8_t byte);
     void emitWord(uint16_t word);

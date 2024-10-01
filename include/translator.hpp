@@ -11,16 +11,9 @@ namespace gbz80{
         BC = 0, DE = 1, HL = 2, SP = 3,
     };
 
-    /*
-     * My little brain couldn't find a better solution for
-     * the duplicated registers.
-     * SORRY :(.
-    */
-    namespace rp2{
-        enum reg : uint8_t{
-            BC = 0, DE = 1, HL = 2, AF = 3
-        };
-    }
+    enum class rp2 : uint8_t {
+        BC = 0, DE = 1, HL = 2, AF = 3
+    };
 }
 
 
@@ -80,7 +73,7 @@ private:
     void add_sp_e8();
     void ld_a_indirect_0xff00Plusn8();
     void ld_hl_sp_plus_d();
-    void pop_rp2(gbz80::rp2::reg reg);
+    void pop_rp2(gbz80::rp2 reg);
     void ret();
     void reti();
     void jp_hl();
@@ -94,7 +87,7 @@ private:
     void di();
     void ei();
     void call_cc_nn(uint8_t cc);
-    void push_rp2(gbz80::rp2::reg reg);
+    void push_rp2(gbz80::rp2 reg);
     void call_nn();
     void add_a_imm();
     void adc_a_imm();

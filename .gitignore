@@ -7,4 +7,3 @@ CMakeFiles
 .vs/
 out/
 CMakeSettings.json
-src/cpu.cpp

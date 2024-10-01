@@ -53,6 +53,13 @@ void x86Emitter::not8r(x86_8 reg)
 void x86Emitter::shift8r(x86_8 target, uint8_t units, shift direction)
 {
     emitByte(0xC0);
-    modRM(mod::RtoR, direction, target);
+    modRM(mod::RtoR, (uint8_t)direction, target);
     emitByte(units);
+}
+
+void x86Emitter::rotate8r(x86_8 target, uint8_t offset, rotate op)
+{
+    emitByte(0xC0);
+    modRM(mod::RtoR, (uint8_t)op, target);
+    emitByte(offset);
 }

@@ -318,7 +318,7 @@ void Translator::ld_a_indirect_nn()
 
 }
 
-void Translator::pop_rp2(gbz80::rp2::reg reg)
+void Translator::pop_rp2(gbz80::rp2 reg)
 {
 
 }
@@ -343,7 +343,7 @@ void Translator::call_cc_nn(uint8_t cc)
 {
 
 }
-void Translator::push_rp2(gbz80::rp2::reg reg)
+void Translator::push_rp2(gbz80::rp2 reg)
 {
 
 }

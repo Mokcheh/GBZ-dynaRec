@@ -156,7 +156,7 @@ void Translator::decodeAndRun(uint8_t opcode)
         case 1:
         {
             if(q ==0)
-                pop_rp2(gbz80::rp2::reg(p));
+                pop_rp2(gbz80::rp2(p));
             else{
                 switch(p){
                 case 0: ret(); break;
@@ -190,7 +190,7 @@ void Translator::decodeAndRun(uint8_t opcode)
         case 5:
         {
             if(q == 0)
-                push_rp2(gbz80::rp2::reg(p));
+                push_rp2(gbz80::rp2(p));
             else if(q == 1 && p == 0)
                 call_nn();
         }break;
