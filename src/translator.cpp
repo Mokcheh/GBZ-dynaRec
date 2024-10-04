@@ -1,22 +1,24 @@
 #include <translator.hpp>
 
-Translator::Translator(std::vector<uint8_t>& clientCache, std::vector<uint8_t>& targetCode):
-    output(clientCache), emitter(clientCache), source(targetCode), cyclesPassed(0), jmpOccured(false)
-{
 
+Translator::Translator(std::vector<uint8_t>& clientCache, uint16_t startingAddress, Bus& bus) :
+    output(clientCache), bus(bus), emitter(clientCache),
+    cyclesPassed(0), jmpOccured(false), blockProgramCounter(startingAddress)
+{
+    
 }
 
 void Translator::translateBlock()
 {
     do{
-        uint8_t opcode = source[blockProgramCounter++];
+        uint8_t opcode = bus.readMemory(blockProgramCounter++);
         if (opcode == 0xCB) {
-            opcode = source[blockProgramCounter++];
+            opcode = bus.readMemory(blockProgramCounter++);
             decodeAndRunCB(opcode);
         }
         else
             decodeAndRun(opcode);
-    }while(blockProgramCounter < source.size()/**!jmpOccured**/);
+    }while(blockProgramCounter < bus.size/**!jmpOccured**/);
 }
 
 void Translator::setSubFlag(bool flag)

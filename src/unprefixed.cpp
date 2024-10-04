@@ -30,7 +30,8 @@ void Translator::jr_cc(gbz80::r relative, uint8_t cc)
 
 void Translator::ld_rp_nn(gbz80::rp dest)
 {
-    const uint16_t imm16 = source[blockProgramCounter] | (source[blockProgramCounter + 1] << 8);
+    const uint16_t imm16 = 
+        bus.readMemory(blockProgramCounter) | (bus.readMemory(blockProgramCounter + 1) << 8);
     emitter.mov16immTo16r(mapR16(dest), imm16);
     blockProgramCounter += 2;
     cyclesPassed += 3;
@@ -83,7 +84,7 @@ void Translator::dec_r(gbz80::r reg)
 
 void Translator::ld_r_n(gbz80::r dest)
 {
-    const uint8_t imm8 = source[blockProgramCounter++];
+    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
     emitter.mov8immTo8r(mapR8(dest), imm8);
     cyclesPassed += 2;
 }
@@ -155,9 +156,15 @@ void Translator::ld_r_r(gbz80::r dest, gbz80::r src)
 }
 
 
-void Translator::ld_rp_indirect(gbz80::rp dest, gbz80::r src)
+void Translator::ld_rp_indirect(gbz80::rp ptr, gbz80::r src)
 {
-
+    uint64_t x = (uint64_t)bus.memory.data();
+    emitter.lahf();
+    emitter.movabsRBP((uint64_t)bus.memory.data());
+    emitter.arithmetic64r16imm(x86_64(mapR16(ptr)), 0xFFFF, AND);
+    emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(ptr)), ADD);
+    emitter.mov8rTo8m(mapR8(src));
+    emitter.sahf();
 }
 
 void Translator::ldi_hl_indirect(gbz80::r src)
@@ -251,7 +258,7 @@ void Translator::ld_indirect_0xff00Plusn8_a()
 void Translator::add_sp_e8()
 {
     //TODO: this instruction segfaults for some reason
-    int8_t e8 = source[blockProgramCounter++];
+    int8_t e8 = bus.readMemory(blockProgramCounter++);
     emitter.arithmetic16r16imm(mapR16(gbz80::SP), e8, ADD);
     setSubFlag(0);
     cyclesPassed += 4;
@@ -355,7 +362,7 @@ void Translator::call_nn()
 
 void Translator::add_a_imm()
 {
-    const uint8_t imm8 = source[blockProgramCounter++];
+    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, ADD);
     setSubFlag(0);
     cyclesPassed += 2;
@@ -363,7 +370,7 @@ void Translator::add_a_imm()
 
 void Translator::adc_a_imm()
 {
-    const uint8_t imm8 = source[blockProgramCounter++];
+    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, ADC);
     setSubFlag(0);
     cyclesPassed += 2;
@@ -371,7 +378,7 @@ void Translator::adc_a_imm()
 
 void Translator::sub_a_imm()
 {
-    const uint8_t imm8 = source[blockProgramCounter++];
+    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, SUB);
     setSubFlag(1);
     cyclesPassed += 2;
@@ -379,7 +386,7 @@ void Translator::sub_a_imm()
 
 void Translator::sbc_a_imm()
 {
-    const uint8_t imm8 = source[blockProgramCounter++];
+    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, SBB);
     setSubFlag(1);
     cyclesPassed += 2;
@@ -387,7 +394,7 @@ void Translator::sbc_a_imm()
 
 void Translator::and_a_imm()
 {
-    const uint8_t imm8 = source[blockProgramCounter++];
+    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, AND);
     setSubFlag(0);
     cyclesPassed += 2;
@@ -395,7 +402,7 @@ void Translator::and_a_imm()
 
 void Translator::xor_a_imm()
 {
-    const uint8_t imm8 = source[blockProgramCounter++];
+    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, XOR);
     setSubFlag(0);
     cyclesPassed += 2;
@@ -404,7 +411,7 @@ void Translator::xor_a_imm()
 
 void Translator::or_a_imm()
 {
-    const uint8_t imm8 = source[blockProgramCounter++];
+    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, OR);
     setSubFlag(0);
     cyclesPassed += 2;
@@ -412,7 +419,7 @@ void Translator::or_a_imm()
 
 void Translator::cp_a_imm()
 {
-    const uint8_t imm8 = source[blockProgramCounter++];
+    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, CMP);
     setSubFlag(1);
     cyclesPassed += 2;

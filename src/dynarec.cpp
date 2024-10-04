@@ -16,16 +16,16 @@
 #endif
 
 
-dynaRec::dynaRec(std::vector<uint8_t>& targetCode): targetCode(targetCode)
+dynaRec::dynaRec(Bus& bus) :
+    bus(bus)
 {
     registerState.fill(0);
 }
 
 void dynaRec::buildCache(Cache& cache, uint16_t targetStartingAddress)
 {
-    Translator translator(cache.x86, targetCode);
+    Translator translator(cache.x86, targetStartingAddress, bus);
     cache.targetStartingAddress = targetStartingAddress;
-    translator.blockProgramCounter = targetStartingAddress;
     translator.translateBlock();
     cache.targetEndingAddress = translator.blockProgramCounter;
     cache.cycles = translator.cyclesPassed;
@@ -134,6 +134,7 @@ void* Cache::generateExecutableCode(const uint16_t* state)
 
     std::vector<uint8_t> cleanup = {
         0x9F, //lahf
+        0x48, 0xBD, 0, 0, 0, 0, 0, 0, 0, 0, //movabs rbp, &state
         0x66, 0x89, 0x45, 0x00, //mov [rbp+0x0], ax
         0x66, 0x89, 0x5D, 0x02, //mov [rbp+0x2], bx
         0x66, 0x89, 0x55, 0x04, //mov [rbp+0x4], dx
@@ -143,6 +144,7 @@ void* Cache::generateExecutableCode(const uint16_t* state)
         0x5D, //pop rbp
         0xC3 //ret
     };
+    memcpy(cleanup.data() + 3, &state, 8);
     sizeRounded = x86.size() + init.size() + cleanup.size();
     LPVOID x86CodeRegion = VirtualAlloc(NULL, sizeRounded, MEM_COMMIT, PAGE_READWRITE);
     if (!x86CodeRegion)

@@ -1,20 +1,20 @@
 #pragma once
-#include <vector>
-#include <cstdint>
 #include <unordered_map>
 #include <translator.hpp>
 #include <array>
+#include <vector>
+#include <cstdint>
 
 class Cache;
 
 class dynaRec{
 public:
-    dynaRec(std::vector<uint8_t>& targetCode);
+    dynaRec(Bus& bus);
     Cache& getCache(uint16_t targetStartingAddress);
     void dispatch(uint16_t programCounter);
 private:
+    Bus& bus;
     std::unordered_map<uint16_t, Cache> cache;
-    std::vector<uint8_t>& targetCode;
     void buildCache(Cache& cache, uint16_t targetStartingAddress);
     std::array<uint16_t, 6> registerState;
 };

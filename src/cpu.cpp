@@ -14,9 +14,11 @@ LR35902::~LR35902()
 int main()
 {
     std::vector<uint8_t> testCode = {
-        0x3E, 0, //LD A, 0
-        0xCB, 0x37 //SWAP A
+        0x3E, 0xBE, //LD A, 0xBE
+        0x01, 0x01, 0,
+        0x02 //LD (BC), A
     };
-    dynaRec dyna(testCode);
+    Bus bus(testCode);
+    dynaRec dyna(bus);
     dyna.dispatch(0);
 }

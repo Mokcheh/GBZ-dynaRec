@@ -63,3 +63,18 @@ void x86Emitter::rotate8r(x86_8 target, uint8_t offset, rotate op)
     modRM(mod::RtoR, (uint8_t)op, target);
     emitByte(offset);
 }
+
+void x86Emitter::arithmetic64r64r(x86_64 dest, x86_64 src, arithmetic op)
+{
+    emitByte(0x48);
+    emitByte(0x8 * op + 1);
+    modRM(mod::RtoR, src, dest);
+}
+
+void x86Emitter::arithmetic64r16imm(x86_64 dest, uint16_t imm16, arithmetic op)
+{
+    emitByte(0x48);
+    emitByte(0x83);
+    modRM(mod::RtoR, op, dest);
+    emitWord(imm16);
+}

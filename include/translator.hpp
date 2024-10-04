@@ -1,5 +1,7 @@
 #pragma once
+
 #include <x86Emitter.hpp>
+#include <bus.hpp>
 
 namespace gbz80{
     enum r : uint8_t{
@@ -19,16 +21,15 @@ namespace gbz80{
 
 class Translator{
 public:
-    Translator(std::vector<uint8_t>& clientCache, std::vector<uint8_t>& targetCode);
-    uint16_t getJMPAddress(uint16_t getStartingAddress);
+    Translator(std::vector<uint8_t>& clientCache, uint16_t startingAddress, Bus& bus);
     void translateBlock();
     uint16_t blockProgramCounter;
     uint32_t cyclesPassed;
     bool jmpOccured;
 private:
     x86Emitter emitter;
+    Bus& bus;
     std::vector<uint8_t>& output;
-    std::vector<uint8_t>& source;
     void setSubFlag(bool flag);
     x86_8 mapR8(gbz80::r r);
     x86_16 mapR16(gbz80::rp rp);

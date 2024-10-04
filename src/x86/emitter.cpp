@@ -1,6 +1,8 @@
 #include <x86Emitter.hpp>
 
-x86Emitter::x86Emitter(std::vector<uint8_t>& client): cache(client){}
+x86Emitter::x86Emitter(std::vector<uint8_t>& client) : 
+    cache(client)
+{}
 
 void x86Emitter::emitByte(uint8_t byte)
 {
@@ -23,4 +25,12 @@ void x86Emitter::sib(uint8_t scale, uint8_t index, uint8_t base)
 {
     const uint8_t result = (scale << 6) | (index << 3) | (base & 0b111);
     emitByte(result);
+}
+
+void x86Emitter::emitQWord(uint64_t qword)
+{
+    for (int i = 0; i < 8; i++) {
+        emitByte(qword & 0xFF);
+        qword >>= 8;
+    }
 }
