@@ -15,7 +15,7 @@ int main()
 {
     std::vector<uint8_t> testCode = {
         0x3E, 0xBE, //LD A, 0xBE
-        0x01, 0x01, 0,
+        0x01, 0x07, 0,
         0x02 //LD (BC), A
     };
     Bus bus(testCode);

@@ -58,6 +58,10 @@ void* Cache::generateExecutableCode(const uint16_t* state)
     //Register states are loaded from an array before execution, saved after.
     std::vector<uint8_t> init = { 0x55, //push rbp
         0x48, 0xBD, 0, 0, 0, 0, 0, 0, 0, 0, //movabs rbp, &state
+        0x48, 0xC7, 0xC1, 0x00, 0x00, 0x00, 0x00, //mov rcx ,0
+        0x48, 0xC7, 0xC3, 0x00, 0x00, 0x00, 0x00, //mov rbx ,0
+        0x48, 0xC7, 0xC2, 0x00, 0x00, 0x00, 0x00, //mov rdx ,0
+        0x48, 0xC7, 0xC6, 0x00, 0x00, 0x00, 0x00, //mov rsi ,0
         0x66, 0x8B, 0x45, 0x00, //mov ax, [rbp+0x0]
         0x66, 0x8B, 0x5D, 0x02, //mov bx, [rbp+0x2]
         0x66, 0x8B, 0x55, 0x04, //mov dx, [rbp+0x4]
@@ -71,6 +75,7 @@ void* Cache::generateExecutableCode(const uint16_t* state)
 
     std::vector<uint8_t> cleanup = {
         0x9F, //lahf
+        0x48, 0xBD, 0, 0, 0, 0, 0, 0, 0, 0, //movabs rbp, &state
         0x66, 0x89, 0x45, 0x00, //mov [rbp+0x0], ax
         0x66, 0x89, 0x5D, 0x02, //mov [rbp+0x2], bx
         0x66, 0x89, 0x55, 0x04, //mov [rbp+0x4], dx
@@ -80,6 +85,7 @@ void* Cache::generateExecutableCode(const uint16_t* state)
         0x5D, //pop rbp
         0xC3 //ret
     };
+    memcpy(cleanup.data() + 3, &state, 8);
     /*
      * mmap takes the size as a multiple of the page size.
      * So rounding the code size to the next largest multiple of 4kb is necessary.
@@ -121,6 +127,10 @@ void* Cache::generateExecutableCode(const uint16_t* state)
     //Register states are loaded from an array before execution, saved after.
     std::vector<uint8_t> init = { 0x55, //push rbp
         0x48, 0xBD, 0, 0, 0, 0, 0, 0, 0, 0, //movabs rbp, &state
+        0x48, 0xC7, 0xC1, 0x00, 0x00, 0x00, 0x00, //mov rcx ,0
+        0x48, 0xC7, 0xC3, 0x00, 0x00, 0x00, 0x00, //mov rbx ,0
+        0x48, 0xC7, 0xC2, 0x00, 0x00, 0x00, 0x00, //mov rdx ,0
+        0x48, 0xC7, 0xC6, 0x00, 0x00, 0x00, 0x00, //mov rsi ,0
         0x66, 0x8B, 0x45, 0x00, //mov ax, [rbp+0x0]
         0x66, 0x8B, 0x5D, 0x02, //mov bx, [rbp+0x2]
         0x66, 0x8B, 0x55, 0x04, //mov dx, [rbp+0x4]
@@ -169,10 +179,11 @@ Cache::~Cache()
 #endif
 
 
-
+#include <bitset>
 
 void Cache::run(const uint16_t* state)
 {
+    void* x = x86.data();
     if(runX86 == nullptr)
         runX86 = generateExecutableCode(state);
     ((void(*)()) runX86)();

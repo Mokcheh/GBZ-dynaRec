@@ -44,7 +44,7 @@ public:
     void arithmetic8r8r(x86_8 dest, x86_8 src, arithmetic op);
     void arithmetic16r16imm(x86_16 dest, uint16_t imm16, arithmetic op);
     void arithmetic64r64r(x86_64 dest, x86_64 src, arithmetic op);
-    void arithmetic64r16imm(x86_64 dest, uint16_t imm16, arithmetic op);
+    void arithmetic64r64imm(x86_64 dest, uint64_t imm64, arithmetic op);
     void add16r16r(x86_16 dest, x86_16 src);
     void push16r(x86_16 reg); void pop16r(x86_16 reg);
     void lahf(); void sahf();

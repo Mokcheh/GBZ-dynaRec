@@ -71,10 +71,10 @@ void x86Emitter::arithmetic64r64r(x86_64 dest, x86_64 src, arithmetic op)
     modRM(mod::RtoR, src, dest);
 }
 
-void x86Emitter::arithmetic64r16imm(x86_64 dest, uint16_t imm16, arithmetic op)
+void x86Emitter::arithmetic64r64imm(x86_64 dest, uint64_t imm64, arithmetic op)
 {
     emitByte(0x48);
-    emitByte(0x83);
+    emitByte(0x81);
     modRM(mod::RtoR, op, dest);
-    emitWord(imm16);
+    emitQWord(imm64);
 }

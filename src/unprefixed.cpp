@@ -158,13 +158,13 @@ void Translator::ld_r_r(gbz80::r dest, gbz80::r src)
 
 void Translator::ld_rp_indirect(gbz80::rp ptr, gbz80::r src)
 {
-    uint64_t x = (uint64_t)bus.memory.data();
+    uint64_t memoryAddress = (uint64_t)bus.memory.data();
     emitter.lahf();
-    emitter.movabsRBP((uint64_t)bus.memory.data());
-    emitter.arithmetic64r16imm(x86_64(mapR16(ptr)), 0xFFFF, AND);
+    emitter.movabsRBP(memoryAddress);
     emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(ptr)), ADD);
     emitter.mov8rTo8m(mapR8(src));
     emitter.sahf();
+    cyclesPassed++;
 }
 
 void Translator::ldi_hl_indirect(gbz80::r src)
