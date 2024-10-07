@@ -150,9 +150,9 @@ void Translator::decodeAndRun(uint8_t opcode)
         case 0: switch(y){
         case 0: case 1: case 2: case 3:
                 ret_cc(y); break;
-            case 4: ld_indirect_0xff00Plusn8_a(); break;
+            case 4: ld_indirect_0xffn8_a(); break;
             case 5: add_sp_e8(); break;
-            case 6: ld_a_indirect_0xff00Plusn8(); break;
+            case 6: ld_a_indirect_0xffn8(); break;
             case 7: ld_hl_sp_plus_d(); break;
             }break;
         case 1:

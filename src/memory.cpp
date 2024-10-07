@@ -17,15 +17,19 @@ namespace gbz80Address
 Bus::Bus(std::vector<uint8_t>& testCode) :
 	size(testCode.size())
 {
-	memory.resize(0x10000);
-	/*
-	for (auto opcode: testCode)
-		memory.emplace_back(opcode);*/
+	workRam.fill(0);
 	for (int i = 0; i < size; i++)
-		memory[i] = testCode[i];
+		rom[i] = testCode[i];
 }
 
 uint8_t Bus::readMemory(uint16_t position)
 {
-	return memory[position];
+	return rom[position];
+}
+
+uint64_t Bus::getMemoryAddress(uint16_t position)
+{
+	if (position >= gbz80Address::workRam::start && position <= gbz80Address::workRam::end)
+		return workRam[position - gbz80Address::workRam::start];
+	return 0;
 }

@@ -37,6 +37,8 @@ public:
     void mov16rTo16r(x86_16 dest, x86_16 src);
     void mov8rTo8r(x86_8 dest, x86_8 src);
     void mov8rTo8m(x86_8 src);
+    void mov16mTo16r(x86_16 dest);
+    void mov8mTo8r(x86_8 dest);
     void movabsRBP(uint64_t imm64);
     void unary8r(x86_8 r8, unary op); 
     void unary16r(x86_16 r16, unary op);

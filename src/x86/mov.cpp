@@ -43,3 +43,22 @@ void x86Emitter::mov8rTo8m(x86_8 src)
     modRM(mod::RtoMdisp8, src, x86_64::RBP);
     emitByte(0);
 }
+
+void x86Emitter::mov8mTo8r(x86_8 dest)
+{
+    /*
+    * The address of 8m is stored in RBP.
+    */
+    emitByte(0x8A);
+    modRM(mod::RtoMdisp8, dest, x86_64::RBP);
+    emitByte(0);
+}
+
+
+void x86Emitter::mov16mTo16r(x86_16 dest)
+{
+    emitByte(0x66);
+    emitByte(0x8B);
+    modRM(mod::RtoMdisp8, dest, x86_64::RBP);
+    emitByte(0);
+}

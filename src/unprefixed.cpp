@@ -10,7 +10,10 @@ void Translator::nop()
 
 void Translator::ld_nnPtr_sp()
 {
-
+    const uint16_t n16 = (bus.rom[blockProgramCounter + 1] << 8) | bus.rom[blockProgramCounter + 1];
+    const uint64_t memoryAddress = (uint64_t)bus.rom.data() + n16;
+    emitter.movabsRBP(memoryAddress);
+    emitter.mov16mTo16r(mapR16(gbz80::SP));
 }
 
 void Translator::stop()
@@ -158,39 +161,73 @@ void Translator::ld_r_r(gbz80::r dest, gbz80::r src)
 
 void Translator::ld_rp_indirect(gbz80::rp ptr, gbz80::r src)
 {
-    uint64_t memoryAddress = (uint64_t)bus.memory.data();
+    uint64_t memoryAddress = (uint64_t)bus.rom.data();
     emitter.lahf();
     emitter.movabsRBP(memoryAddress);
     emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(ptr)), ADD);
     emitter.mov8rTo8m(mapR8(src));
     emitter.sahf();
-    cyclesPassed++;
+    cyclesPassed += 2;
 }
 
 void Translator::ldi_hl_indirect(gbz80::r src)
 {
-
+    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    emitter.lahf();
+    emitter.movabsRBP(memoryAddress);
+    emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::HL)), ADD);
+    emitter.mov8rTo8m(mapR8(src));
+    emitter.unary16r(mapR16(gbz80::HL), inc);
+    emitter.sahf();
+    cyclesPassed += 2;
 }
 
 
 void Translator::ldd_hl_indirect(gbz80::r src)
 {
-
+    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    emitter.lahf();
+    emitter.movabsRBP(memoryAddress);
+    emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::HL)), ADD);
+    emitter.mov8rTo8m(mapR8(src));
+    emitter.unary16r(mapR16(gbz80::HL), dec);
+    emitter.sahf();
+    cyclesPassed += 2;
 }
 
 void Translator::ld_a_rpIndirect(gbz80::rp src)
 {
-
+    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    emitter.lahf();
+    emitter.movabsRBP(memoryAddress);
+    emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(src)), ADD);
+    emitter.mov8mTo8r(mapR8(gbz80::A));
+    emitter.sahf();
+    cyclesPassed += 2;
 }
 
 void Translator::ldi_a_hl_indirect()
 {
-
+    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    emitter.lahf();
+    emitter.movabsRBP(memoryAddress);
+    emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::HL)), ADD);
+    emitter.mov8mTo8r(mapR8(gbz80::A));
+    emitter.unary16r(mapR16(gbz80::HL), inc);
+    emitter.sahf();
+    cyclesPassed += 2;
 }
 
 void Translator::ldd_a_hl_indirect()
 {
-
+    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    emitter.lahf();
+    emitter.movabsRBP(memoryAddress);
+    emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::HL)), ADD);
+    emitter.mov8mTo8r(mapR8(gbz80::A));
+    emitter.unary16r(mapR16(gbz80::HL), dec);
+    emitter.sahf();
+    cyclesPassed += 2;
 }
 
 
@@ -250,9 +287,16 @@ void Translator::cp_a(gbz80::r reg)
     setSubFlag(1);
 }
 
-void Translator::ld_indirect_0xff00Plusn8_a()
+void Translator::ld_indirect_0xffn8_a()
 {
-
+    const uint16_t address = 0xFF00 + bus.rom[blockProgramCounter++];
+    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    emitter.lahf();
+    emitter.movabsRBP(memoryAddress);
+    emitter.arithmetic64r64imm(x86_64::RBP, address, ADD);
+    emitter.mov8rTo8m(mapR8(gbz80::A));
+    emitter.sahf();
+    cyclesPassed += 3;
 }
 
 void Translator::add_sp_e8()
@@ -264,14 +308,27 @@ void Translator::add_sp_e8()
     cyclesPassed += 4;
 }
 
-void Translator::ld_a_indirect_0xff00Plusn8()
+void Translator::ld_a_indirect_0xffn8()
 {
-
+    const uint16_t address = 0xFF00 + bus.rom[blockProgramCounter++];
+    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    emitter.lahf();
+    emitter.movabsRBP(memoryAddress);
+    emitter.arithmetic64r64imm(x86_64::RBP, address, ADD);
+    emitter.mov8mTo8r(mapR8(gbz80::A));
+    emitter.sahf();
+    cyclesPassed += 3;
 }
 
 void Translator::ld_hl_sp_plus_d()
 {
-
+    int8_t e8 = bus.readMemory(blockProgramCounter++);
+    emitter.push16r(mapR16(gbz80::SP));
+    emitter.arithmetic16r16imm(mapR16(gbz80::SP), e8, ADD);
+    emitter.mov16rTo16r(mapR16(gbz80::HL), mapR16(gbz80::SP));
+    emitter.pop16r(mapR16(gbz80::SP));
+    setSubFlag(0);
+    cyclesPassed += 4;
 }
 
 void Translator::ret_cc(uint8_t cc)
@@ -296,7 +353,8 @@ void Translator::jp_hl()
 
 void Translator::ld_sp_hl()
 {
-
+    emitter.mov16rTo16r(mapR16(gbz80::SP), mapR16(gbz80::HL));
+    cyclesPassed += 2;
 }
 
 void Translator::jp_cc_nn(uint8_t cc)
@@ -322,7 +380,12 @@ void Translator::ld_a_indirect_0xff00PlusC()
 
 void Translator::ld_a_indirect_nn()
 {
-
+    const uint16_t n16 = (bus.rom[blockProgramCounter + 1] << 8) | bus.rom[blockProgramCounter + 1];
+    const uint64_t memoryAddress = (uint64_t)bus.rom.data() + n16;
+    emitter.movabsRBP(memoryAddress);
+    emitter.mov8mTo8r(mapR8(gbz80::A));
+    blockProgramCounter += 2;
+    cyclesPassed += 4;
 }
 
 void Translator::pop_rp2(gbz80::rp2 reg)

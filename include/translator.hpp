@@ -70,9 +70,9 @@ private:
     void or_a(gbz80::r reg);
     void cp_a(gbz80::r reg);
     void ret_cc(uint8_t cc);
-    void ld_indirect_0xff00Plusn8_a();
+    void ld_indirect_0xffn8_a();
     void add_sp_e8();
-    void ld_a_indirect_0xff00Plusn8();
+    void ld_a_indirect_0xffn8();
     void ld_hl_sp_plus_d();
     void pop_rp2(gbz80::rp2 reg);
     void ret();
