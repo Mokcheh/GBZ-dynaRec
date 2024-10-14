@@ -20,7 +20,7 @@ void Translator::rl(gbz80::r target)
     emitter.arithmetic8r8imm(x86_8::AL, mapR8(target), ADD);
     emitter.lahf();
     emitter.arithmetic8r8imm(x86_8::AH, ZF, AND);
-    emitter.orStack8r8(1, x86_8::AH);
+    emitter.or8stack8r(1, x86_8::AH);
     emitter.pop16r(x86_16::AX);
     emitter.sahf();
     cyclesPassed += 2;
@@ -35,7 +35,7 @@ void Translator::rr(gbz80::r target)
     emitter.arithmetic8r8imm(x86_8::AL, mapR8(target), ADD);
     emitter.lahf();
     emitter.arithmetic8r8imm(x86_8::AH, ZF, AND);
-    emitter.orStack8r8(1, x86_8::AH);
+    emitter.or8stack8r(1, x86_8::AH);
     emitter.pop16r(x86_16::AX);
     emitter.sahf();
     cyclesPassed += 2;
@@ -63,7 +63,7 @@ void Translator::swap(gbz80::r target)
     emitter.shift8r(mapR8(target), 4, shift::LEFT);
     emitter.arithmetic8r8r(mapR8(target), x86_8::AH, OR);
     if (target == gbz80::A)
-        emitter.mov8rToStack8(0, mapR8(target));
+        emitter.mov8rTo8stack(0, mapR8(target));
     emitter.pop16r(x86_16::AX);
     emitter.sahf();
     setSubFlag(0);

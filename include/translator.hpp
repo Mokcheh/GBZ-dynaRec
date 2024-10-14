@@ -33,6 +33,7 @@ private:
     void setSubFlag(bool flag);
     x86_8 mapR8(gbz80::r r);
     x86_16 mapR16(gbz80::rp rp);
+    void generateAF();
     /*TODO: Implement GBZ instruction in x86 assembly.*/
     /* Source:
      * https://izik1.github.io/gbops/
@@ -80,9 +81,9 @@ private:
     void jp_hl();
     void ld_sp_hl();
     void jp_cc_nn(uint8_t cc);
-    void ld_indirect_nnPlusC_a();
+    void ldh_c_a();
     void ld_indirect_nn_a();
-    void ld_a_indirect_0xff00PlusC();
+    void ldh_a_c();
     void ld_a_indirect_nn();
     void jp_nn();
     void di();
@@ -110,9 +111,6 @@ private:
     void swap(gbz80::r target);
     void srl(gbz80::r target);
     void sra(gbz80::r target);
-
-
-
 };
 
 

@@ -10,8 +10,8 @@ void Translator::nop()
 
 void Translator::ld_nnPtr_sp()
 {
-    const uint16_t n16 = (bus.rom[blockProgramCounter + 1] << 8) | bus.rom[blockProgramCounter + 1];
-    const uint64_t memoryAddress = (uint64_t)bus.rom.data() + n16;
+    const uint16_t n16 = (bus.memory[blockProgramCounter + 1] << 8) | bus.memory[blockProgramCounter + 1];
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data() + n16;
     emitter.movabsRBP(memoryAddress);
     emitter.mov16mTo16r(mapR16(gbz80::SP));
 }
@@ -34,7 +34,7 @@ void Translator::jr_cc(gbz80::r relative, uint8_t cc)
 void Translator::ld_rp_nn(gbz80::rp dest)
 {
     const uint16_t imm16 = 
-        bus.readMemory(blockProgramCounter) | (bus.readMemory(blockProgramCounter + 1) << 8);
+        bus.memory.at(blockProgramCounter) | (bus.memory.at(blockProgramCounter + 1) << 8);
     emitter.mov16immTo16r(mapR16(dest), imm16);
     blockProgramCounter += 2;
     cyclesPassed += 3;
@@ -54,7 +54,7 @@ void Translator::add_hl_rp(gbz80::rp src)
     emitter.arithmetic8r8r(mapR8(gbz80::H), x86_8::AH, ADC);
     emitter.lahf();
     emitter.arithmetic8r8imm(x86_8::AH, 0b10001, AND);
-    emitter.orStack8r8(1, x86_8::AH);
+    emitter.or8stack8r(1, x86_8::AH);
     emitter.pop16r(x86_16::AX);
     emitter.sahf();
     setSubFlag(0);
@@ -87,7 +87,7 @@ void Translator::dec_r(gbz80::r reg)
 
 void Translator::ld_r_n(gbz80::r dest)
 {
-    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
+    const uint8_t imm8 = bus.memory.at(blockProgramCounter++);
     emitter.mov8immTo8r(mapR8(dest), imm8);
     cyclesPassed += 2;
 }
@@ -161,7 +161,7 @@ void Translator::ld_r_r(gbz80::r dest, gbz80::r src)
 
 void Translator::ld_rp_indirect(gbz80::rp ptr, gbz80::r src)
 {
-    uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    uint64_t memoryAddress = (uint64_t)bus.memory.data();
     emitter.lahf();
     emitter.movabsRBP(memoryAddress);
     emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(ptr)), ADD);
@@ -172,7 +172,7 @@ void Translator::ld_rp_indirect(gbz80::rp ptr, gbz80::r src)
 
 void Translator::ldi_hl_indirect(gbz80::r src)
 {
-    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
     emitter.lahf();
     emitter.movabsRBP(memoryAddress);
     emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::HL)), ADD);
@@ -185,7 +185,7 @@ void Translator::ldi_hl_indirect(gbz80::r src)
 
 void Translator::ldd_hl_indirect(gbz80::r src)
 {
-    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
     emitter.lahf();
     emitter.movabsRBP(memoryAddress);
     emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::HL)), ADD);
@@ -197,7 +197,7 @@ void Translator::ldd_hl_indirect(gbz80::r src)
 
 void Translator::ld_a_rpIndirect(gbz80::rp src)
 {
-    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
     emitter.lahf();
     emitter.movabsRBP(memoryAddress);
     emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(src)), ADD);
@@ -208,7 +208,7 @@ void Translator::ld_a_rpIndirect(gbz80::rp src)
 
 void Translator::ldi_a_hl_indirect()
 {
-    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
     emitter.lahf();
     emitter.movabsRBP(memoryAddress);
     emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::HL)), ADD);
@@ -220,7 +220,7 @@ void Translator::ldi_a_hl_indirect()
 
 void Translator::ldd_a_hl_indirect()
 {
-    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
     emitter.lahf();
     emitter.movabsRBP(memoryAddress);
     emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::HL)), ADD);
@@ -289,8 +289,8 @@ void Translator::cp_a(gbz80::r reg)
 
 void Translator::ld_indirect_0xffn8_a()
 {
-    const uint16_t address = 0xFF00 + bus.rom[blockProgramCounter++];
-    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    const uint16_t address = 0xFF00 + bus.memory[blockProgramCounter++];
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
     emitter.lahf();
     emitter.movabsRBP(memoryAddress);
     emitter.arithmetic64r64imm(x86_64::RBP, address, ADD);
@@ -302,7 +302,7 @@ void Translator::ld_indirect_0xffn8_a()
 void Translator::add_sp_e8()
 {
     //TODO: this instruction segfaults for some reason
-    int8_t e8 = bus.readMemory(blockProgramCounter++);
+    int8_t e8 = bus.memory.at(blockProgramCounter++);
     emitter.arithmetic16r16imm(mapR16(gbz80::SP), e8, ADD);
     setSubFlag(0);
     cyclesPassed += 4;
@@ -310,8 +310,8 @@ void Translator::add_sp_e8()
 
 void Translator::ld_a_indirect_0xffn8()
 {
-    const uint16_t address = 0xFF00 + bus.rom[blockProgramCounter++];
-    const uint64_t memoryAddress = (uint64_t)bus.rom.data();
+    const uint16_t address = 0xFF00 + bus.memory[blockProgramCounter++];
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
     emitter.lahf();
     emitter.movabsRBP(memoryAddress);
     emitter.arithmetic64r64imm(x86_64::RBP, address, ADD);
@@ -322,7 +322,7 @@ void Translator::ld_a_indirect_0xffn8()
 
 void Translator::ld_hl_sp_plus_d()
 {
-    int8_t e8 = bus.readMemory(blockProgramCounter++);
+    int8_t e8 = bus.memory.at(blockProgramCounter++);
     emitter.push16r(mapR16(gbz80::SP));
     emitter.arithmetic16r16imm(mapR16(gbz80::SP), e8, ADD);
     emitter.mov16rTo16r(mapR16(gbz80::HL), mapR16(gbz80::SP));
@@ -363,25 +363,50 @@ void Translator::jp_cc_nn(uint8_t cc)
 }
 
 
-void Translator::ld_indirect_nnPlusC_a()
+void Translator::ldh_c_a()
 {
-
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data() + 0xFF00;
+    emitter.movabsRBP(memoryAddress);
+    emitter.lahf();
+    emitter.push16r(mapR16(gbz80::BC));
+    emitter.arithmetic64r64imm(x86_64(mapR16(gbz80::BC)), 0xFF, AND);
+    emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::BC)), ADD);
+    emitter.mov8rTo8m(mapR8(gbz80::A));
+    emitter.pop16r(mapR16(gbz80::BC));
+    emitter.sahf();
+    cyclesPassed += 4;
 }
 
 void Translator::ld_indirect_nn_a()
 {
-
+    const uint16_t n16 = 
+        (bus.memory[blockProgramCounter + 1] << 8) | bus.memory[blockProgramCounter + 1];
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data() + n16;
+    emitter.movabsRBP(memoryAddress);
+    emitter.mov8rTo8m(mapR8(gbz80::A));
+    blockProgramCounter += 2;
+    cyclesPassed += 4;
 }
 
-void Translator::ld_a_indirect_0xff00PlusC()
+void Translator::ldh_a_c()
 {
-
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data() + 0xFF00;
+    emitter.movabsRBP(memoryAddress);
+    emitter.lahf();
+    emitter.push16r(mapR16(gbz80::BC));
+    emitter.arithmetic64r64imm(x86_64(mapR16(gbz80::BC)), 0xFF, AND);
+    emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::BC)), ADD);
+    emitter.mov8mTo8r(mapR8(gbz80::A));
+    emitter.pop16r(mapR16(gbz80::BC));
+    emitter.sahf();
+    cyclesPassed += 4;
 }
 
 void Translator::ld_a_indirect_nn()
 {
-    const uint16_t n16 = (bus.rom[blockProgramCounter + 1] << 8) | bus.rom[blockProgramCounter + 1];
-    const uint64_t memoryAddress = (uint64_t)bus.rom.data() + n16;
+    const uint16_t n16 = 
+        (bus.memory[blockProgramCounter + 1] << 8) | bus.memory[blockProgramCounter + 1];
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data() + n16;
     emitter.movabsRBP(memoryAddress);
     emitter.mov8mTo8r(mapR8(gbz80::A));
     blockProgramCounter += 2;
@@ -390,6 +415,18 @@ void Translator::ld_a_indirect_nn()
 
 void Translator::pop_rp2(gbz80::rp2 reg)
 {
+    x86_16 r16;
+    if (reg == gbz80::rp2::AF)
+    {
+        r16 = x86_16::AX;
+        
+    }
+    else
+    {
+        r16 = mapR16(gbz80::rp(reg));
+    }
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
+    emitter.movabsRBP(memoryAddress);
 
 }
 
@@ -425,7 +462,7 @@ void Translator::call_nn()
 
 void Translator::add_a_imm()
 {
-    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
+    const uint8_t imm8 = bus.memory.at(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, ADD);
     setSubFlag(0);
     cyclesPassed += 2;
@@ -433,7 +470,7 @@ void Translator::add_a_imm()
 
 void Translator::adc_a_imm()
 {
-    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
+    const uint8_t imm8 = bus.memory.at(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, ADC);
     setSubFlag(0);
     cyclesPassed += 2;
@@ -441,7 +478,7 @@ void Translator::adc_a_imm()
 
 void Translator::sub_a_imm()
 {
-    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
+    const uint8_t imm8 = bus.memory.at(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, SUB);
     setSubFlag(1);
     cyclesPassed += 2;
@@ -449,7 +486,7 @@ void Translator::sub_a_imm()
 
 void Translator::sbc_a_imm()
 {
-    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
+    const uint8_t imm8 = bus.memory.at(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, SBB);
     setSubFlag(1);
     cyclesPassed += 2;
@@ -457,7 +494,7 @@ void Translator::sbc_a_imm()
 
 void Translator::and_a_imm()
 {
-    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
+    const uint8_t imm8 = bus.memory.at(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, AND);
     setSubFlag(0);
     cyclesPassed += 2;
@@ -465,7 +502,7 @@ void Translator::and_a_imm()
 
 void Translator::xor_a_imm()
 {
-    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
+    const uint8_t imm8 = bus.memory.at(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, XOR);
     setSubFlag(0);
     cyclesPassed += 2;
@@ -474,7 +511,7 @@ void Translator::xor_a_imm()
 
 void Translator::or_a_imm()
 {
-    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
+    const uint8_t imm8 = bus.memory.at(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, OR);
     setSubFlag(0);
     cyclesPassed += 2;
@@ -482,7 +519,7 @@ void Translator::or_a_imm()
 
 void Translator::cp_a_imm()
 {
-    const uint8_t imm8 = bus.readMemory(blockProgramCounter++);
+    const uint8_t imm8 = bus.memory.at(blockProgramCounter++);
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, CMP);
     setSubFlag(1);
     cyclesPassed += 2;

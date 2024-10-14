@@ -11,19 +11,27 @@ Translator::Translator(std::vector<uint8_t>& clientCache, uint16_t startingAddre
 void Translator::translateBlock()
 {
     do{
-        uint8_t opcode = bus.readMemory(blockProgramCounter++);
+        uint8_t opcode = bus.memory.at(blockProgramCounter++);
         if (opcode == 0xCB) {
-            opcode = bus.readMemory(blockProgramCounter++);
+            opcode = bus.memory.at(blockProgramCounter++);
             decodeAndRunCB(opcode);
         }
         else
             decodeAndRun(opcode);
-    }while(blockProgramCounter < bus.size/**!jmpOccured**/);
+    }while(blockProgramCounter < bus.romSize/**!jmpOccured**/);
 }
 
 void Translator::setSubFlag(bool flag)
 {
-    emitter.mov16immTo16r(x86_16(DI), flag);
+    emitter.mov16immTo16r(x86_16::DI, flag);
+}
+
+void Translator::generateAF()
+{
+    emitter.lahf();
+    emitter.push16r(x86_16::AX);
+    
+
 }
 
 
@@ -171,9 +179,9 @@ void Translator::decodeAndRun(uint8_t opcode)
         case 2: switch(y){
         case 0: case 1: case2: case 3:
                 jp_cc_nn(y); break;
-            case 4: ld_indirect_nnPlusC_a(); break;
+            case 4: ldh_c_a(); break;
             case 5: ld_indirect_nn_a(); break;
-            case 6: ld_a_indirect_0xff00PlusC(); break;
+            case 6: ldh_a_c(); break;
             case 7: ld_a_indirect_nn(); break;
             }break;
 
