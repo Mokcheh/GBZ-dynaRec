@@ -10,10 +10,12 @@ void Translator::nop()
 
 void Translator::ld_nnPtr_sp()
 {
-    const uint16_t n16 = (bus.memory[blockProgramCounter + 1] << 8) | bus.memory[blockProgramCounter + 1];
+    const uint16_t n16 =
+        (bus.memory[blockProgramCounter + 1] << 8) | bus.memory[blockProgramCounter + 1];
     const uint64_t memoryAddress = (uint64_t)bus.memory.data() + n16;
     emitter.movabsRBP(memoryAddress);
     emitter.mov16mTo16r(mapR16(gbz80::SP));
+    cyclesPassed += 5;
 }
 
 void Translator::stop()
@@ -44,7 +46,8 @@ void Translator::add_hl_rp(gbz80::rp src)
 {
     /*
      * This instruction sets the half carry flag when overflow is generated from bit 11.
-     * The problem with x86_64 is that the half carry flag is set only if carry/borrow is generated from
+     * The problem with x86_64 is that the half carry flag is set only if
+     * carry/borrow is generated from
      * the lowest 4 bits. And there is no instruction to set the flag manually.
     */
     emitter.lahf();
@@ -54,7 +57,7 @@ void Translator::add_hl_rp(gbz80::rp src)
     emitter.arithmetic8r8r(mapR8(gbz80::H), x86_8::AH, ADC);
     emitter.lahf();
     emitter.arithmetic8r8imm(x86_8::AH, 0b10001, AND);
-    emitter.or8stack8r(1, x86_8::AH);
+    emitter.arithmetic8stack8r(1, x86_8::AH, OR);
     emitter.pop16r(x86_16::AX);
     emitter.sahf();
     setSubFlag(0);
@@ -94,27 +97,53 @@ void Translator::ld_r_n(gbz80::r dest)
 
 void Translator::rlca()
 {
-
+    emitter.rotate8r(mapR8(gbz80::A), 1, rotate::LEFT);
+    emitter.lahf();
+    emitter.arithmetic8r8imm(x86_8::AH, ~(ZF + AF), AND);
+    emitter.sahf();
+    cyclesPassed++;
 }
 
 void Translator::rrca()
 {
-
+    emitter.rotate8r(mapR8(gbz80::A), 1, rotate::LEFT);
+    emitter.lahf();
+    emitter.arithmetic8r8imm(x86_8::AH, ~(ZF + AF), AND);
+    emitter.sahf();
+    cyclesPassed++;
 }
 
 void Translator::rla()
 {
 
+    emitter.rotateWithCarry(mapR8(gbz80::A), RC::RIGHT);
+    setSubFlag(0);
+    cyclesPassed++;
 }
 
 void Translator::rra()
 {
-
+    emitter.rotateWithCarry(mapR8(gbz80::A), RC::RIGHT);
+    setSubFlag(0);
+    cyclesPassed++;
 }
 
-void Translator::dda()
-{
+uint8_t adjustToBCD(uint8_t binary){
+    uint8_t tens = binary / 10;
+    uint8_t units = binary % 10;
+    uint8_t bcd = (tens << 4) | units;
+    return bcd;
+}
 
+void Translator::daa()
+{
+    auto function = (void*)&adjustToBCD;
+    emitter._cdeclCallFunction(function, x86_16::AX);
+    emitter.mov8rTo8stack(0, x86_8::AL);
+    emitter.pop16r(x86_16::AX);
+    emitter.arithmetic8r8imm(x86_8::AH, ~AF, AND);
+    emitter.sahf();
+    cyclesPassed++;
 }
 
 void Translator::cpl()
@@ -157,7 +186,6 @@ void Translator::ld_r_r(gbz80::r dest, gbz80::r src)
     emitter.mov8rTo8r(mapR8(dest), mapR8(src));
     cyclesPassed += 2;
 }
-
 
 void Translator::ld_rp_indirect(gbz80::rp ptr, gbz80::r src)
 {
@@ -415,19 +443,23 @@ void Translator::ld_a_indirect_nn()
 
 void Translator::pop_rp2(gbz80::rp2 reg)
 {
-    x86_16 r16;
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
+    emitter.lahf();
+    emitter.movabsRBP(memoryAddress);
+    emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::SP)), ADD);
+    emitter.sahf();
     if (reg == gbz80::rp2::AF)
     {
-        r16 = x86_16::AX;
-        
+        emitter.mov16mTo16r(x86_16::AX);
+        emitter.xchg8r8r(x86_8::AH, x86_8::AL);
+        emitter.importFlags();
     }
     else
-    {
-        r16 = mapR16(gbz80::rp(reg));
-    }
-    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
-    emitter.movabsRBP(memoryAddress);
-
+        emitter.mov16mTo16r(mapR16(gbz80::rp(reg)));
+    emitter.lahf();
+    emitter.arithmetic16r16imm(mapR16(gbz80::SP), 2, ADD);
+    emitter.sahf();
+    cyclesPassed += 3;
 }
 
 
@@ -450,9 +482,27 @@ void Translator::call_cc_nn(uint8_t cc)
 {
 
 }
+
 void Translator::push_rp2(gbz80::rp2 reg)
 {
-
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
+    emitter.lahf();
+    emitter.movabsRBP(memoryAddress);
+    emitter.arithmetic16r16imm(mapR16(gbz80::SP), 2, SUB);
+    emitter.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::SP)), ADD);
+    emitter.sahf();
+    if (reg == gbz80::rp2::AF)
+    {
+        emitter.push16r(x86_16::AX);
+        generateFlags();
+        emitter.xchg8r8r(x86_8::AH, x86_8::AL);
+        emitter.mov16rTo16m(x86_16::AX);
+        emitter.pop16r(x86_16::AX);
+        emitter.sahf();
+    }
+    else
+        emitter.mov16rTo16m(mapR16(gbz80::rp(reg)));
+    cyclesPassed += 4;
 }
 
 void Translator::call_nn()
@@ -506,7 +556,6 @@ void Translator::xor_a_imm()
     emitter.arithmetic8r8imm(mapR8(gbz80::A), imm8, XOR);
     setSubFlag(0);
     cyclesPassed += 2;
-
 }
 
 void Translator::or_a_imm()

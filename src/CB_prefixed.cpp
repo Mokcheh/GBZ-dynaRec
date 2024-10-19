@@ -20,7 +20,7 @@ void Translator::rl(gbz80::r target)
     emitter.arithmetic8r8imm(x86_8::AL, mapR8(target), ADD);
     emitter.lahf();
     emitter.arithmetic8r8imm(x86_8::AH, ZF, AND);
-    emitter.or8stack8r(1, x86_8::AH);
+    emitter.arithmetic8stack8r(1, x86_8::AH, OR);
     emitter.pop16r(x86_16::AX);
     emitter.sahf();
     cyclesPassed += 2;
@@ -35,7 +35,7 @@ void Translator::rr(gbz80::r target)
     emitter.arithmetic8r8imm(x86_8::AL, mapR8(target), ADD);
     emitter.lahf();
     emitter.arithmetic8r8imm(x86_8::AH, ZF, AND);
-    emitter.or8stack8r(1, x86_8::AH);
+    emitter.arithmetic8stack8r(1, x86_8::AH, OR);
     emitter.pop16r(x86_16::AX);
     emitter.sahf();
     cyclesPassed += 2;

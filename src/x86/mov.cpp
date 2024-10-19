@@ -1,6 +1,12 @@
 #include <x86Emitter.hpp>
 
 
+void x86Emitter::xchg8r8r(x86_8 reg1, x86_8 reg2)
+{
+    emitByte(0x86);
+    modRM(mod::RtoR, reg1, reg2);
+}
+
 void x86Emitter::mov8immTo8r(x86_8 r8, uint8_t imm8)
 {
     emitByte(0xB0 + r8);
@@ -60,5 +66,13 @@ void x86Emitter::mov16mTo16r(x86_16 dest)
     emitByte(0x66);
     emitByte(0x8B);
     modRM(mod::RtoMdisp8, dest, x86_64::RBP);
+    emitByte(0);
+}
+
+void x86Emitter::mov16rTo16m(x86_16 reg)
+{
+    emitByte(0x66);
+    emitByte(0x89);
+    modRM(mod::RtoMdisp8, reg, x86_64::RBP);
     emitByte(0);
 }

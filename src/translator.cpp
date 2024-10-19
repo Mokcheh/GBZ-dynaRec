@@ -11,7 +11,7 @@ Translator::Translator(std::vector<uint8_t>& clientCache, uint16_t startingAddre
 void Translator::translateBlock()
 {
     do{
-        uint8_t opcode = bus.memory.at(blockProgramCounter++);
+        uint8_t opcode = bus.memory[blockProgramCounter++];
         if (opcode == 0xCB) {
             opcode = bus.memory.at(blockProgramCounter++);
             decodeAndRunCB(opcode);
@@ -26,12 +26,36 @@ void Translator::setSubFlag(bool flag)
     emitter.mov16immTo16r(x86_16::DI, flag);
 }
 
-void Translator::generateAF()
+void Translator::generateFlags()
 {
     emitter.lahf();
+    /*arrange flags to match the gbz80 register.*/
+    emitter.push16r(x86_16::BX);
+    emitter.mov8rTo8r(x86_8::BL, x86_8::AH);
+    emitter.arithmetic8r8imm(x86_8::BL, CF, AND);
+    emitter.mov8rTo8r(x86_8::BH, x86_8::AH);
+    emitter.arithmetic8r8imm(x86_8::BH, AF, AND);
+    emitter.shift8r(x86_8::BH, 3, shift::RIGHT);
+    emitter.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
+    emitter.mov8rTo8r(x86_8::BH, x86_8::AH);
+    emitter.arithmetic8r8imm(x86_8::BH, ZF, AND);
+    emitter.shift8r(x86_8::BH, 3, shift::RIGHT);
+    emitter.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
+    /*
+     * Moving dil around requires special encoding with REX prefix and stuff.
+     * So I'll just move DI to AX and use AL instead.
+    */
     emitter.push16r(x86_16::AX);
-    
-
+    emitter.mov16rTo16r(x86_16::AX, x86_16::DI);
+    emitter.mov8rTo8r(x86_8::BH, x86_8::AL);
+    emitter.shift8r(x86_8::BH, 2, shift::LEFT);
+    emitter.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
+    /*gbz80 flags are on the high side of the register.*/
+    emitter.shift8r(x86_8::BL, 4, shift::LEFT);
+    emitter.pop16r(x86_16::AX);
+    emitter.sahf();
+    emitter.mov8rTo8r(x86_8::AH, x86_8::BL);
+    emitter.pop16r(x86_16::BX);
 }
 
 
@@ -127,7 +151,7 @@ void Translator::decodeAndRun(uint8_t opcode)
             case 1: rrca();break;
             case 2: rla();break;
             case 3: rra();break;
-            case 4: dda();break;
+            case 4: daa();break;
             case 5: cpl();break;
             case 6: scf();break;
             case 7: ccf();break;
@@ -165,7 +189,7 @@ void Translator::decodeAndRun(uint8_t opcode)
             }break;
         case 1:
         {
-            if(q ==0)
+            if(q == 0)
                 pop_rp2(gbz80::rp2(p));
             else{
                 switch(p){

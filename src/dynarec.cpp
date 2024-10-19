@@ -178,12 +178,8 @@ Cache::~Cache()
 }
 #endif
 
-
-#include <bitset>
-
 void Cache::run(const uint16_t* state)
 {
-    void* x = x86.data();
     if(runX86 == nullptr)
         runX86 = generateExecutableCode(state);
     ((void(*)()) runX86)();

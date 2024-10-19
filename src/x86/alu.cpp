@@ -30,6 +30,7 @@ void x86Emitter::arithmetic8r8r(x86_8 dest, x86_8 src, arithmetic op)
 
 void x86Emitter::arithmetic16r16imm(x86_16 dest, uint16_t imm16, arithmetic op)
 {
+    emitByte(0x66);
     emitByte(0x81);
     modRM(mod::RtoR, op, dest);
     emitWord(imm16);
@@ -77,4 +78,10 @@ void x86Emitter::arithmetic64r64imm(x86_64 dest, uint64_t imm64, arithmetic op)
     emitByte(0x81);
     modRM(mod::RtoR, op, dest);
     emitQWord(imm64);
+}
+
+void x86Emitter::rotateWithCarry(x86_8 target, RC direction)
+{
+    emitByte(0xD0);
+    modRM(mod::RtoR, (uint8_t)direction, 0);
 }

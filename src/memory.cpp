@@ -17,8 +17,7 @@ namespace gbz80Address
 Bus::Bus(std::vector<uint8_t>& testCode):
 	romSize(testCode.size())
 {
-	memory.reserve(0x10000);
-	for (auto code : testCode)
-		memory.emplace_back(code);
-	ptr = memory.data();
+    memory.resize(0x10000);
+    for(int i = 0; i < romSize; i++)
+        memory[i] = testCode[i];
 }
