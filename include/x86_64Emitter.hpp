@@ -29,9 +29,9 @@ enum class shift : uint8_t { LEFT = 4, RIGHT = 5 };
 enum class rotate : uint8_t { LEFT = 0, RIGHT = 1 };
 enum class RC: uint8_t { LEFT = 2, RIGHT = 3 };
 
-class x86Emitter{
+class x64Emitter{
 public:
-    x86Emitter(std::vector<uint8_t>& client);
+    x64Emitter(std::vector<uint8_t>& client);
     void importFlags();
     void __cdeclCallFunction(void* function, x86_16 argument);
     /*TODO: Implement x86 assembly emitters*/

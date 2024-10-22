@@ -91,7 +91,8 @@ void* Cache::generateExecutableCode(const uint16_t* state)
      * mmap takes the size as a multiple of the page size.
      * So rounding the code size to the next largest multiple of 4kb is necessary.
     */
-    this->sizeRounded = std::ceil((float)(x86.size() + init.size() + cleanup.size()) / pageSize) * pageSize;
+    this->sizeRounded =
+        std::ceil((float)(x86.size() + init.size() + cleanup.size()) / pageSize) * pageSize;
     void* x86CodeRegion = mmap(
         nullptr,
         sizeRounded,

@@ -1,22 +1,22 @@
-#include <x86Emitter.hpp>
+#include <x86_64Emitter.hpp>
 
 
-void x86Emitter::lahf()
+void x64Emitter::lahf()
 {
     emitByte(0x9F);
 }
 
-void x86Emitter::sahf()
+void x64Emitter::sahf()
 {
     emitByte(0x9E);
 }
 
-void x86Emitter::stc()
+void x64Emitter::stc()
 {
     emitByte(0xF9);
 }
 
-void x86Emitter::cmc()
+void x64Emitter::cmc()
 {
     emitByte(0xF5);
 }

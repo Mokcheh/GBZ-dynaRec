@@ -1,6 +1,6 @@
 #pragma once
 
-#include <x86Emitter.hpp>
+#include <x86_64Emitter.hpp>
 #include <bus.hpp>
 
 namespace gbz80{
@@ -27,7 +27,7 @@ public:
     uint32_t cyclesPassed;
     bool jmpOccured;
 private:
-    x86Emitter emitter;
+    x64Emitter x64;
     Bus& bus;
     std::vector<uint8_t>& output;
     void setSubFlag(bool flag);

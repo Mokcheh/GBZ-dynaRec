@@ -2,7 +2,7 @@
 
 
 Translator::Translator(std::vector<uint8_t>& clientCache, uint16_t startingAddress, Bus& bus) :
-    output(clientCache), bus(bus), emitter(clientCache),
+    output(clientCache), bus(bus), x64(clientCache),
     cyclesPassed(0), jmpOccured(false), blockProgramCounter(startingAddress)
 {
     
@@ -24,39 +24,39 @@ void Translator::translateBlock()
 
 void Translator::setSubFlag(bool flag)
 {
-    emitter.mov16immTo16r(x86_16::DI, flag);
+    x64.mov16immTo16r(x86_16::DI, flag);
 }
 
 void Translator::generateFlags()
 {
-    emitter.lahf();
+    x64.lahf();
     /*arrange flags to match the gbz80 register.*/
-    emitter.push16r(x86_16::BX);
-    emitter.mov8rTo8r(x86_8::BL, x86_8::AH);
-    emitter.arithmetic8r8imm(x86_8::BL, CF, AND);
-    emitter.mov8rTo8r(x86_8::BH, x86_8::AH);
-    emitter.arithmetic8r8imm(x86_8::BH, AF, AND);
-    emitter.bitwise8r(x86_8::BH, 3, (uint8_t)shift::RIGHT);
-    emitter.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
-    emitter.mov8rTo8r(x86_8::BH, x86_8::AH);
-    emitter.arithmetic8r8imm(x86_8::BH, ZF, AND);
-    emitter.bitwise8r(x86_8::BH, 3, (uint8_t)shift::RIGHT);
-    emitter.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
+    x64.push16r(x86_16::BX);
+    x64.mov8rTo8r(x86_8::BL, x86_8::AH);
+    x64.arithmetic8r8imm(x86_8::BL, CF, AND);
+    x64.mov8rTo8r(x86_8::BH, x86_8::AH);
+    x64.arithmetic8r8imm(x86_8::BH, AF, AND);
+    x64.bitwise8r(x86_8::BH, 3, (uint8_t)shift::RIGHT);
+    x64.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
+    x64.mov8rTo8r(x86_8::BH, x86_8::AH);
+    x64.arithmetic8r8imm(x86_8::BH, ZF, AND);
+    x64.bitwise8r(x86_8::BH, 3, (uint8_t)shift::RIGHT);
+    x64.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
     /*
      * Moving dil around requires special encoding with REX prefix and stuff.
      * So I'll just move DI to AX and use AL instead.
     */
-    emitter.push16r(x86_16::AX);
-    emitter.mov16rTo16r(x86_16::AX, x86_16::DI);
-    emitter.mov8rTo8r(x86_8::BH, x86_8::AL);
-    emitter.bitwise8r(x86_8::BH, 2, (uint8_t)shift::LEFT);
-    emitter.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
+    x64.push16r(x86_16::AX);
+    x64.mov16rTo16r(x86_16::AX, x86_16::DI);
+    x64.mov8rTo8r(x86_8::BH, x86_8::AL);
+    x64.bitwise8r(x86_8::BH, 2, (uint8_t)shift::LEFT);
+    x64.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
     /*gbz80 flags are on the high side of the register.*/
-    emitter.bitwise8r(x86_8::BL, 4, (uint8_t)shift::LEFT);
-    emitter.pop16r(x86_16::AX);
-    emitter.sahf();
-    emitter.mov8rTo8r(x86_8::AH, x86_8::BL);
-    emitter.pop16r(x86_16::BX);
+    x64.bitwise8r(x86_8::BL, 4, (uint8_t)shift::LEFT);
+    x64.pop16r(x86_16::AX);
+    x64.sahf();
+    x64.mov8rTo8r(x86_8::AH, x86_8::BL);
+    x64.pop16r(x86_16::BX);
 }
 
 
