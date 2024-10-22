@@ -97,18 +97,20 @@ void Translator::ld_r_n(gbz80::r dest)
 
 void Translator::rlca()
 {
-    emitter.rotate8r(mapR8(gbz80::A), 1, rotate::LEFT);
+    emitter.bitwise8r(mapR8(gbz80::A), (uint8_t)rotate::LEFT);
     emitter.lahf();
     emitter.arithmetic8r8imm(x86_8::AH, ~(ZF + AF), AND);
+    setSubFlag(0);
     emitter.sahf();
     cyclesPassed++;
 }
 
 void Translator::rrca()
 {
-    emitter.rotate8r(mapR8(gbz80::A), 1, rotate::LEFT);
+    emitter.bitwise8r(mapR8(gbz80::A), (uint8_t)rotate::LEFT);
     emitter.lahf();
     emitter.arithmetic8r8imm(x86_8::AH, ~(ZF + AF), AND);
+    setSubFlag(0);
     emitter.sahf();
     cyclesPassed++;
 }
@@ -116,29 +118,28 @@ void Translator::rrca()
 void Translator::rla()
 {
 
-    emitter.rotateWithCarry(mapR8(gbz80::A), RC::RIGHT);
+    emitter.bitwise8r(mapR8(gbz80::A), (uint8_t)RC::RIGHT);
     setSubFlag(0);
     cyclesPassed++;
 }
 
 void Translator::rra()
 {
-    emitter.rotateWithCarry(mapR8(gbz80::A), RC::RIGHT);
+    emitter.bitwise8r(mapR8(gbz80::A), (uint8_t)RC::RIGHT);
     setSubFlag(0);
     cyclesPassed++;
 }
 
 uint8_t adjustToBCD(uint8_t binary){
-    uint8_t tens = binary / 10;
-    uint8_t units = binary % 10;
-    uint8_t bcd = (tens << 4) | units;
+    const uint8_t tens = binary / 10;
+    const uint8_t units = binary % 10;
+    const uint8_t bcd = (tens << 4) | units;
     return bcd;
 }
 
 void Translator::daa()
 {
-    auto function = (void*)&adjustToBCD;
-    emitter._cdeclCallFunction(function, x86_16::AX);
+    emitter.__cdeclCallFunction((void*)&adjustToBCD, x86_16::AX);
     emitter.mov8rTo8stack(0, x86_8::AL);
     emitter.pop16r(x86_16::AX);
     emitter.arithmetic8r8imm(x86_8::AH, ~AF, AND);

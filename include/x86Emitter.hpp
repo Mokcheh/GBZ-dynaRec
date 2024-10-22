@@ -33,7 +33,7 @@ class x86Emitter{
 public:
     x86Emitter(std::vector<uint8_t>& client);
     void importFlags();
-    void _cdeclCallFunction(void* function, x86_16 argument);
+    void __cdeclCallFunction(void* function, x86_16 argument);
     /*TODO: Implement x86 assembly emitters*/
     void xchg8r8r(x86_8 reg1, x86_8 reg2);
     void mov8immTo8r(x86_8 r8, uint8_t imm8);
@@ -60,9 +60,8 @@ public:
     void mov8rTo8stack(uint8_t offset, x86_8 src);
     void cmc(); void stc();
     void not8r(x86_8 reg);
-    void shift8r(x86_8 target, uint8_t units, shift direction);
-    void rotate8r(x86_8 target, uint8_t offset, rotate op);
-    void rotateWithCarry(x86_8 target, RC direction);
+    void bitwise8r(x86_8 target, uint8_t op);
+    void bitwise8r(x86_8 target, uint8_t units, uint8_t op);
 private:
     void emitByte(uint8_t byte);
     void emitWord(uint16_t word);

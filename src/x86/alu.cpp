@@ -50,21 +50,6 @@ void x86Emitter::not8r(x86_8 reg)
     modRM(mod::RtoR, 2, reg);
 }
 
-
-void x86Emitter::shift8r(x86_8 target, uint8_t units, shift direction)
-{
-    emitByte(0xC0);
-    modRM(mod::RtoR, (uint8_t)direction, target);
-    emitByte(units);
-}
-
-void x86Emitter::rotate8r(x86_8 target, uint8_t offset, rotate op)
-{
-    emitByte(0xC0);
-    modRM(mod::RtoR, (uint8_t)op, target);
-    emitByte(offset);
-}
-
 void x86Emitter::arithmetic64r64r(x86_64 dest, x86_64 src, arithmetic op)
 {
     emitByte(0x48);
@@ -80,8 +65,19 @@ void x86Emitter::arithmetic64r64imm(x86_64 dest, uint64_t imm64, arithmetic op)
     emitQWord(imm64);
 }
 
-void x86Emitter::rotateWithCarry(x86_8 target, RC direction)
+void x86Emitter::bitwise8r(x86_8 target, uint8_t units, uint8_t op)
 {
+    if(op > (uint8_t)shift::RIGHT)
+        return;
+    emitByte(0xC0);
+    modRM(mod::RtoR, op, target);
+    emitByte(units);
+}
+
+void x86Emitter::bitwise8r(x86_8 target, uint8_t op)
+{
+    if(op > (uint8_t)shift::RIGHT)
+        return;
     emitByte(0xD0);
-    modRM(mod::RtoR, (uint8_t)direction, 0);
+    modRM(mod::RtoR, op, 0);
 }

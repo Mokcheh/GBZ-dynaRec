@@ -15,6 +15,7 @@ void Translator::translateBlock()
         if (opcode == 0xCB) {
             opcode = bus.memory.at(blockProgramCounter++);
             decodeAndRunCB(opcode);
+            cyclesPassed += 2;
         }
         else
             decodeAndRun(opcode);
@@ -35,11 +36,11 @@ void Translator::generateFlags()
     emitter.arithmetic8r8imm(x86_8::BL, CF, AND);
     emitter.mov8rTo8r(x86_8::BH, x86_8::AH);
     emitter.arithmetic8r8imm(x86_8::BH, AF, AND);
-    emitter.shift8r(x86_8::BH, 3, shift::RIGHT);
+    emitter.bitwise8r(x86_8::BH, 3, (uint8_t)shift::RIGHT);
     emitter.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
     emitter.mov8rTo8r(x86_8::BH, x86_8::AH);
     emitter.arithmetic8r8imm(x86_8::BH, ZF, AND);
-    emitter.shift8r(x86_8::BH, 3, shift::RIGHT);
+    emitter.bitwise8r(x86_8::BH, 3, (uint8_t)shift::RIGHT);
     emitter.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
     /*
      * Moving dil around requires special encoding with REX prefix and stuff.
@@ -48,10 +49,10 @@ void Translator::generateFlags()
     emitter.push16r(x86_16::AX);
     emitter.mov16rTo16r(x86_16::AX, x86_16::DI);
     emitter.mov8rTo8r(x86_8::BH, x86_8::AL);
-    emitter.shift8r(x86_8::BH, 2, shift::LEFT);
+    emitter.bitwise8r(x86_8::BH, 2, (uint8_t)shift::LEFT);
     emitter.arithmetic8r8r(x86_8::BL, x86_8::BH, OR);
     /*gbz80 flags are on the high side of the register.*/
-    emitter.shift8r(x86_8::BL, 4, shift::LEFT);
+    emitter.bitwise8r(x86_8::BL, 4, (uint8_t)shift::LEFT);
     emitter.pop16r(x86_16::AX);
     emitter.sahf();
     emitter.mov8rTo8r(x86_8::AH, x86_8::BL);
