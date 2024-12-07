@@ -2,11 +2,12 @@
 
 
 Translator::Translator(std::vector<uint8_t>& clientCache, uint16_t startingAddress, Bus& bus) :
-    output(clientCache), bus(bus), x64(clientCache),
-    cyclesPassed(0), jmpOccured(false), blockProgramCounter(startingAddress)
+    output(clientCache), bus(bus), x64(clientCache), stopHit(false),
+    cyclesPassed(0), blockProgramCounter(startingAddress), jumpAddress(0xFFFF)
 {
     
 }
+
 
 void Translator::translateBlock()
 {
@@ -19,7 +20,22 @@ void Translator::translateBlock()
         }
         else
             decodeAndRun(opcode);
-    }while(blockProgramCounter < bus.romSize/**!jmpOccured**/);
+    }while((jumpAddress == 0xFFFF) && !stopHit/**!jmpOccured**/);
+}
+
+uint16_t Translator::getJumpAddress()
+{
+    return jumpAddress;
+}
+
+std::shared_ptr<uint16_t> Translator::getReturnAddress()
+{
+    return runtimeReturn.address;
+}
+
+bool Translator::isRet()
+{
+    return runtimeReturn.on;
 }
 
 void Translator::setSubFlag(bool flag)
@@ -76,6 +92,7 @@ x86_8 Translator::mapR8(gbz80::r r)
     }
     return reg;
 }
+
 x86_16 Translator::mapR16(gbz80::rp rp)
 {
     x86_16 reg;

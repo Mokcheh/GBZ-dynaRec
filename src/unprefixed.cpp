@@ -20,7 +20,7 @@ void Translator::ld_nnPtr_sp()
 
 void Translator::stop()
 {
-
+    stopHit = true;
 }
 
 void Translator::jr(gbz80::r relative)
@@ -46,7 +46,7 @@ void Translator::add_hl_rp(gbz80::rp src)
 {
     /*
      * This instruction sets the half carry flag when overflow is generated from bit 11.
-     * The problem with x86_64:: is that the half carry flag is set only if
+     * The problem with x86 is that the half carry flag is set only if
      * carry/borrow is generated from
      * the lowest 4 bits. And there is no instruction to set the flag manually.
     */
@@ -373,7 +373,20 @@ void Translator::ret_cc(uint8_t cc)
 
 void Translator::ret()
 {
+    runtimeReturn.address = std::make_shared<uint16_t>();
+    runtimeReturn.on = true;
+    x64.push16r(mapR16(gbz80::BC));
+    pop_rp2(gbz80::rp2::BC);
 
+    x64.movabsRBP((uint64_t)runtimeReturn.address.get());
+    x64.mov16rTo16m(mapR16(gbz80::BC));
+    x64.pop16r(mapR16(gbz80::BC));
+    /*
+     * ret takes 4 cycles to complete
+     * with pop_rp2 taking 3 cycles adding another cycle will do the job.
+    */
+    stopHit = true;
+    cyclesPassed++;
 }
 
 void Translator::reti()
@@ -514,7 +527,12 @@ void Translator::push_rp2(gbz80::rp2 reg)
 
 void Translator::call_nn()
 {
-
+    x64.push16r(mapR16(gbz80::HL));
+    x64.mov16immTo16r(mapR16(gbz80::HL), blockProgramCounter + 2);
+    push_rp2(gbz80::rp2::HL);
+    x64.pop16r(mapR16(gbz80::HL));
+    jumpAddress =
+        (bus.memory.at(blockProgramCounter + 1) << 8) | bus.memory.at(blockProgramCounter);
 }
 
 void Translator::add_a_imm()

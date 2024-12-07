@@ -3,7 +3,7 @@
 #include <cmath>
 #include <dynarec.hpp>
 
-#ifdef __linux__ 
+#ifdef __linux__
 #include <unistd.h>
 #include <sys/mman.h>
 
@@ -22,13 +22,30 @@ dynaRec::dynaRec(Bus& bus) :
     registerState.fill(0);
 }
 
+void Cache::setRuntimeReturnAddress(std::shared_ptr<uint16_t> adr)
+{
+    runtimeReturnAddress = adr;
+}
+
+bool Cache::isRuntimeReturnSet()
+{
+    if(runtimeReturnAddress == nullptr)
+        return false;
+    setJumpAddress(*runtimeReturnAddress);
+    return true;
+}
+
 void dynaRec::buildCache(Cache& cache, uint16_t targetStartingAddress)
 {
     Translator translator(cache.x86, targetStartingAddress, bus);
-    cache.targetStartingAddress = targetStartingAddress;
+    cache.setStartingAddress(targetStartingAddress);
     translator.translateBlock();
-    cache.targetEndingAddress = translator.blockProgramCounter;
-    cache.cycles = translator.cyclesPassed;
+    cache.setEndingAddress(translator.blockProgramCounter);
+    if(translator.isRet())
+        cache.setRuntimeReturnAddress(translator.getReturnAddress());
+    else if(translator.getJumpAddress() != 0xFFFF)
+        cache.setJumpAddress(translator.getJumpAddress());
+    cache.setCycleCount(translator.cyclesPassed);
 }
 
 Cache& dynaRec::getCache(uint16_t targetStartingAddress)
@@ -42,10 +59,12 @@ void dynaRec::dispatch(uint16_t programCounter)
 {
     Cache& current = getCache(programCounter);
     current.run(registerState.data());
+    if(current.isJumpSet())
+        dispatch(current.getJumpAddress());
 }
 
 
-#ifdef __linux__ 
+#ifdef __linux__
 void* Cache::generateExecutableCode(const uint16_t* state)
 {
     size_t pageSize = sysconf(_SC_PAGESIZE);
@@ -123,6 +142,7 @@ Cache::~Cache()
     munmap(this->runX86, this->sizeRounded);
 }
 
+
 #elif _WIN32
 void* Cache::generateExecutableCode(const uint16_t* state)
 {
@@ -181,9 +201,98 @@ Cache::~Cache()
 }
 #endif
 
+Cache::Cache():
+        runX86(nullptr), cycles(0), sizeRounded(0)
+{
+    start.address = end.address = jump.address = 0;
+    start.isSet = end.isSet = jump.isSet = false;
+}
+
 void Cache::run(const uint16_t* state)
 {
     if(runX86 == nullptr)
         runX86 = generateExecutableCode(state);
     ((void(*)()) runX86)();
+    if((runtimeReturnAddress != nullptr) && !jump.isSet)
+        setJumpAddress(*runtimeReturnAddress);
+}
+
+void Cache::setStartingAddress(uint16_t adr)
+{
+    try{
+        if(start.isSet)
+            throw std::runtime_error("Starting address has already been set!");
+        start.address  = adr;
+        start.isSet = true;
+    }catch(const std::runtime_error& error){
+        std::cout << "Cache Starting address : "
+                  << start.address << " Error: " << error.what() << "\n";
+        exit(EXIT_FAILURE);
+    }
+}
+
+void Cache::setEndingAddress(uint16_t adr)
+{
+    try{
+        if(end.isSet)
+            throw std::runtime_error("Ending address has already been set!");
+        end.address  = adr;
+        end.isSet = true;
+    }catch(const std::runtime_error& error){
+        std::cout << "Cache Ending address : "
+                  << start.address << " Error: " << error.what() << "\n";
+        exit(EXIT_FAILURE);
+    }
+}
+
+void Cache::setJumpAddress(uint16_t adr)
+{
+    try{
+        if(jump.isSet)
+            throw std::runtime_error("Jump address has already been set!");
+        jump.address  = adr;
+        jump.isSet = true;
+    }catch(const std::runtime_error& error){
+        std::cout << "Cache Jump address : "
+                  << start.address << " Error: " << error.what() << "\n";
+        exit(EXIT_FAILURE);
+    }
+}
+
+uint16_t Cache::getEndingAddress()
+{
+    return end.address;
+}
+
+uint16_t Cache::getStartingAddress()
+{
+    return start.address;
+}
+
+uint16_t Cache::getJumpAddress()
+{
+    return jump.address;
+}
+
+bool Cache::isJumpSet()
+{
+    return jump.isSet;
+}
+
+void Cache::setCycleCount(uint32_t cycles)
+{
+    try{
+        if(this->cycles != 0)
+            throw std::runtime_error("Cycle count has already been set!");
+        this->cycles = cycles;
+    }catch(const std::runtime_error& error){
+        std::cout << "Cache cycle count : "
+                  << start.address << " Error: " << error.what() << "\n";
+        exit(EXIT_FAILURE);
+    }
+}
+
+uint32_t Cache::getCycleCount()
+{
+    return cycles;
 }

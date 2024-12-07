@@ -2,6 +2,7 @@
 
 #include <x86_64Emitter.hpp>
 #include <bus.hpp>
+#include <memory>
 
 namespace gbz80{
     enum r : uint8_t{
@@ -18,18 +19,28 @@ namespace gbz80{
     };
 }
 
+struct runtimeAddress
+{
+    bool on = false;
+    std::shared_ptr<uint16_t> address;
+};
 
 class Translator{
 public:
-    Translator(std::vector<uint8_t>& clientCache, uint16_t startingAddress, Bus& bus);
+    Translator(std::vector<uint8_t>& clientCache, uint16_t start, Bus& bus);
     void translateBlock();
     uint16_t blockProgramCounter;
     uint32_t cyclesPassed;
-    bool jmpOccured;
+    uint16_t getJumpAddress();
+    std::shared_ptr<uint16_t> getReturnAddress();
+    bool isRet();
 private:
+    runtimeAddress runtimeReturn;
+    bool stopHit;
     x64Emitter x64;
     Bus& bus;
     std::vector<uint8_t>& output;
+    uint16_t jumpAddress;
     void setSubFlag(bool flag);
     x86_8 mapR8(gbz80::r r);
     x86_16 mapR16(gbz80::rp rp);
@@ -112,5 +123,3 @@ private:
     void srl(gbz80::r target);
     void sra(gbz80::r target);
 };
-
-
