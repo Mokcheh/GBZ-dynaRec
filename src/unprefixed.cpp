@@ -472,7 +472,7 @@ void Translator::pop_rp2(gbz80::rp2 reg)
     {
         x64.mov16mTo16r(x86_16::AX);
         x64.xchg8r8r(x86_8::AH, x86_8::AL);
-        x64.importFlags();
+        importFlags();
     }
     else
         x64.mov16mTo16r(mapR16(gbz80::rp(reg)));

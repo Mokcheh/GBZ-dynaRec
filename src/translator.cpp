@@ -75,6 +75,28 @@ void Translator::generateFlags()
     x64.pop16r(x86_16::BX);
 }
 
+uint16_t generateX64Flags(uint16_t val)
+{
+    const uint8_t targetFlags = val >> 8;
+    const bool carry = targetFlags >> 4;
+    const bool halfCarry = targetFlags >> 5;
+    const bool subtract = targetFlags >> 6;
+    const bool zero = targetFlags >> 7;
+    const bool clientFlags = carry | (halfCarry >> 4) | (zero >> 6);
+    return (subtract | (clientFlags >> 8));
+}
+
+void Translator::importFlags()
+{
+    x64.push16r(x86_16::AX);
+    x64.__cdeclCallFunction((void*)&generateX64Flags, x86_16::AX);
+    x64.mov16rTo16r(x86_16::DI, x86_16::AX);
+    x64.arithmetic16r16imm(x86_16::DI, 1, AND);
+    x64.sahf();
+    x64.pop16r(x86_16::AX);
+}
+
+
 
 x86_8 Translator::mapR8(gbz80::r r)
 {

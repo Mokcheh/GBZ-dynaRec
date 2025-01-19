@@ -49,6 +49,7 @@ private:
     /* Source:
      * https://izik1.github.io/gbops/
     */
+    void importFlags();
     void decodeAndRun(uint8_t opcode);
     void decodeAndRunCB(uint8_t opcode);
     void nop();

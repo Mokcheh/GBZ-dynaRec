@@ -4,11 +4,6 @@ x64Emitter::x64Emitter(std::vector<uint8_t>& client) :
     cache(client)
 {}
 
-void x64Emitter::importFlags()
-{
-
-}
-
 
 void x64Emitter::callFromRbp()
 {

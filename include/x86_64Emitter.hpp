@@ -32,7 +32,6 @@ enum class RC: uint8_t { LEFT = 2, RIGHT = 3 };
 class x64Emitter{
 public:
     x64Emitter(std::vector<uint8_t>& client);
-    void importFlags();
     void __cdeclCallFunction(void* function, x86_16 argument);
     /*TODO: Implement x86 assembly emitters*/
     void xchg8r8r(x86_8 reg1, x86_8 reg2);
