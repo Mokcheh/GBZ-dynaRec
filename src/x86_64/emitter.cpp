@@ -13,26 +13,26 @@ void x64Emitter::callFromRbp()
 
 void x64Emitter::__cdeclCallFunction(void *function, x86_16 argument)
 {
-#ifdef __linux
     movabsRBP((uint64_t)function);
     /*The callee uses the registers, overriding the values
      * So saving them is necessary.
     */
-    for(uint8_t reg=0; reg<=x86_16::DI; reg++)
+    for (uint8_t reg = 0; reg <= x86_16::DI; reg++)
     {
-        if(reg != x86_16::SP && reg != x86_16::BP)
+        if (reg != x86_16::SP && reg != x86_16::BP)
             push16r(x86_16(reg));
     }
+#ifdef __linux
     mov16rTo16r(x86_16::DI, argument);
+#elif _WIN32
+    mov16rTo16r(x86_16::CX, argument);
+#endif
     callFromRbp();
-    for(uint8_t reg=x86_16::DI; reg > x86_16::AX; reg--)
+    for (uint8_t reg = x86_16::DI; reg > x86_16::AX; reg--)
     {
-        if(reg != x86_16::SP && reg != x86_16::BP)
+        if (reg != x86_16::SP && reg != x86_16::BP)
             pop16r(x86_16(reg));
     }
-#elif __WIN32
-#endif
-
 }
 
 void x64Emitter::emitByte(uint8_t byte)
