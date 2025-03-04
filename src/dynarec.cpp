@@ -27,14 +27,6 @@ void Cache::setRuntimeReturnAddress(std::shared_ptr<uint16_t> adr)
     runtimeReturnAddress = adr;
 }
 
-bool Cache::isRuntimeReturnSet()
-{
-    if(runtimeReturnAddress == nullptr)
-        return false;
-    setJumpAddress(*runtimeReturnAddress);
-    return true;
-}
-
 void dynaRec::buildCache(Cache& cache, uint16_t targetStartingAddress)
 {
     Translator translator(cache.x86, targetStartingAddress, bus);

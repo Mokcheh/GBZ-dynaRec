@@ -41,7 +41,6 @@ public:
     uint16_t getJumpAddress();
     bool isJumpSet();
     void setRuntimeReturnAddress(std::shared_ptr<uint16_t> adr);
-    bool isRuntimeReturnSet();
     void setJumpAddress(uint16_t adr);
 private:
     std::shared_ptr<uint16_t> runtimeReturnAddress;
