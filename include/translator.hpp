@@ -19,12 +19,6 @@ namespace gbz80{
     };
 }
 
-struct runtimeAddress
-{
-    bool on = false;
-    std::shared_ptr<uint16_t> address;
-};
-
 class Translator{
 public:
     Translator(std::vector<uint8_t>& clientCache, uint16_t start, Bus& bus);
@@ -33,9 +27,8 @@ public:
     uint32_t cyclesPassed;
     uint16_t getJumpAddress();
     std::shared_ptr<uint16_t> getReturnAddress();
-    bool isRet();
 private:
-    runtimeAddress runtimeReturn;
+    std::shared_ptr<uint16_t> returnAddress;
     bool stopHit;
     x64Emitter x64;
     Bus& bus;

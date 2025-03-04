@@ -373,12 +373,11 @@ void Translator::ret_cc(uint8_t cc)
 
 void Translator::ret()
 {
-    runtimeReturn.address = std::make_shared<uint16_t>();
-    runtimeReturn.on = true;
+    returnAddress = std::make_shared<uint16_t>();
     x64.push16r(mapR16(gbz80::BC));
     pop_rp2(gbz80::rp2::BC);
 
-    x64.movabsRBP((uint64_t)runtimeReturn.address.get());
+    x64.movabsRBP((uint64_t)returnAddress.get());
     x64.mov16rTo16m(mapR16(gbz80::BC));
     x64.pop16r(mapR16(gbz80::BC));
     /*

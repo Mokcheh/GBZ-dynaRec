@@ -41,7 +41,7 @@ void dynaRec::buildCache(Cache& cache, uint16_t targetStartingAddress)
     cache.setStartingAddress(targetStartingAddress);
     translator.translateBlock();
     cache.setEndingAddress(translator.blockProgramCounter);
-    if(translator.isRet())
+    if(translator.getReturnAddress() != nullptr)
         cache.setRuntimeReturnAddress(translator.getReturnAddress());
     else if(translator.getJumpAddress() != 0xFFFF)
         cache.setJumpAddress(translator.getJumpAddress());

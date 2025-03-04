@@ -30,12 +30,7 @@ uint16_t Translator::getJumpAddress()
 
 std::shared_ptr<uint16_t> Translator::getReturnAddress()
 {
-    return runtimeReturn.address;
-}
-
-bool Translator::isRet()
-{
-    return runtimeReturn.on;
+    return returnAddress;
 }
 
 void Translator::setSubFlag(bool flag)
