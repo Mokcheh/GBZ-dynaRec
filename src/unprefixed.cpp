@@ -11,7 +11,7 @@ void Translator::nop()
 void Translator::ld_nnPtr_sp()
 {
     const uint16_t n16 =
-        (bus.memory[blockProgramCounter + 1] << 8) | bus.memory[blockProgramCounter + 1];
+        (bus.memory[blockProgramCounter + 1] << 8) | bus.memory[blockProgramCounter];
     const uint64_t memoryAddress = (uint64_t)bus.memory.data() + n16;
     x64.movabsRBP(memoryAddress);
     x64.mov16mTo16r(mapR16(gbz80::SP));
@@ -427,7 +427,7 @@ void Translator::ldh_c_a()
 void Translator::ld_indirect_nn_a()
 {
     const uint16_t n16 = 
-        (bus.memory[blockProgramCounter + 1] << 8) | bus.memory[blockProgramCounter + 1];
+        (bus.memory[blockProgramCounter + 1] << 8) | bus.memory[blockProgramCounter];
     const uint64_t memoryAddress = (uint64_t)bus.memory.data() + n16;
     x64.movabsRBP(memoryAddress);
     x64.mov8rTo8m(mapR8(gbz80::A));
@@ -452,7 +452,7 @@ void Translator::ldh_a_c()
 void Translator::ld_a_indirect_nn()
 {
     const uint16_t n16 = 
-        (bus.memory[blockProgramCounter + 1] << 8) | bus.memory[blockProgramCounter + 1];
+        (bus.memory[blockProgramCounter + 1] << 8) | bus.memory[blockProgramCounter];
     const uint64_t memoryAddress = (uint64_t)bus.memory.data() + n16;
     x64.movabsRBP(memoryAddress);
     x64.mov8mTo8r(mapR8(gbz80::A));
@@ -471,7 +471,7 @@ void Translator::pop_rp2(gbz80::rp2 reg)
     {
         x64.mov16mTo16r(x86_16::AX);
         x64.xchg8r8r(x86_8::AH, x86_8::AL);
-        importFlags();
+        importGBZ80FlagsToX64();
     }
     else
         x64.mov16mTo16r(mapR16(gbz80::rp(reg)));
@@ -513,7 +513,7 @@ void Translator::push_rp2(gbz80::rp2 reg)
     if (reg == gbz80::rp2::AF)
     {
         x64.push16r(x86_16::AX);
-        generateFlags();
+        generateGBZ80FlagsFromX64();
         x64.xchg8r8r(x86_8::AH, x86_8::AL);
         x64.mov16rTo16m(x86_16::AX);
         x64.pop16r(x86_16::AX);
