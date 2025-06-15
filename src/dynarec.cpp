@@ -31,6 +31,71 @@ void Cache::setRuntimeReturnAddress(std::shared_ptr<uint16_t> adr)
     runtimeReturnAddress = adr;
 }
 
+uint8_t dynaRec::getRegister(x86_8 reg) const
+{
+    uint8_t registerContent = 0;
+    switch (reg) {
+        case x86_8::AL:
+            registerContent = getRegister(x86_16::AX) & 0xFF;
+            break;
+        case x86_8::AH:
+            registerContent = getRegister(x86_16::AX) >> 8;
+            break;
+        case x86_8::BL:
+            registerContent = getRegister(x86_16::BX) & 0xFF;
+            break;
+        case x86_8::BH:
+            registerContent = getRegister(x86_16::BX) >> 8;
+            break;
+        case x86_8::CL:
+            registerContent = getRegister(x86_16::CX) & 0xFF;
+            break;
+        case x86_8::CH:
+            registerContent = getRegister(x86_16::CX) >> 8;
+            break;
+        case x86_8::DL:
+            registerContent = getRegister(x86_16::DX) & 0xFF;
+            break;
+        case x86_8::DH:
+            registerContent = getRegister(x86_16::DX) >> 8;
+            break;
+        default: break;
+    }
+    return registerContent;
+}
+
+uint16_t dynaRec::getRegister(x86_16 reg) const
+{
+    uint16_t registerContent = 0;
+    switch (reg) {
+        case x86_16::AX:
+            registerContent = registerState[0];
+            break;
+        case x86_16::BX:
+            registerContent = registerState[1];
+            break;
+        case x86_16::DX:
+            registerContent = registerState[2];
+            break;
+        case x86_16::SI:
+            registerContent = registerState[3];
+            break;
+        case x86_16::CX:
+            registerContent = registerState[4];
+            break;
+        case x86_16::DI:
+            registerContent = registerState[5];
+            break;
+        default: break;
+    }
+    return registerContent;
+}
+
+uint8_t dynaRec::getFlags() const 
+{
+    return registerState[0] >> 8;
+}
+
 void dynaRec::buildCache(Cache& cache, uint16_t targetStartingAddress)
 {
     Translator translator(cache.x86, targetStartingAddress, bus);

@@ -1,4 +1,5 @@
 #pragma once
+#include "x86_64Emitter.hpp"
 #include <unordered_map>
 #include <translator.hpp>
 #include <array>
@@ -13,6 +14,9 @@ public:
     dynaRec(Bus& bus);
     Cache& getCache(uint16_t targetStartingAddress);
     void dispatch(uint16_t programCounter);
+    uint8_t getRegister(x86_8 reg) const;
+    uint16_t getRegister(x86_16 reg) const;
+    uint8_t getFlags() const;
 private:
     Bus& bus;
     std::unordered_map<uint16_t, Cache> cache;
