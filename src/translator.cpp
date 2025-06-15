@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <translator.hpp>
 
 
@@ -11,6 +12,7 @@ Translator::Translator(std::vector<uint8_t>& clientCache, uint16_t startingAddre
 
 void Translator::translateBlock()
 {
+    importGBZ80FlagsToX64();
     do{
         uint8_t opcode = bus.memory[blockProgramCounter++];
         if (opcode == 0xCB) {
@@ -21,6 +23,7 @@ void Translator::translateBlock()
         else
             decodeAndRun(opcode);
     }while((jumpAddress == 0xFFFF) && !stopHit/**!jmpOccured**/);
+    generateGBZ80FlagsFromX64();
 }
 
 uint16_t Translator::getJumpAddress()
@@ -38,7 +41,7 @@ void Translator::setSubFlag(bool flag)
     x64.mov16immTo16r(x86_16::DI, flag);
 }
 
-void Translator::generateFlags()
+void Translator::generateGBZ80FlagsFromX64()
 {
     x64.lahf();
     /*arrange flags to match the gbz80 register.*/
@@ -75,15 +78,13 @@ uint16_t generateX64Flags(uint16_t val)
     const uint8_t targetFlags = val >> 8;
     const bool carry = targetFlags >> 4;
     const bool halfCarry = targetFlags >> 5;
-    const bool subtract = targetFlags >> 6;
     const bool zero = targetFlags >> 7;
-    const bool clientFlags = carry | (halfCarry >> 4) | (zero >> 6);
-    return (subtract | (clientFlags >> 8));
+    const uint8_t clientFlags = carry | (halfCarry << 4) | (zero << 6);
+    return (clientFlags << 8);
 }
 
-void Translator::importFlags()
+void Translator::importGBZ80FlagsToX64()
 {
-    x64.push16r(x86_16::AX);
     x64.__cdeclCallFunction((void*)&generateX64Flags, x86_16::AX);
     x64.mov16rTo16r(x86_16::DI, x86_16::AX);
     x64.arithmetic16r16imm(x86_16::DI, 1, AND);

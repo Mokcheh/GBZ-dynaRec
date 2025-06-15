@@ -27,6 +27,8 @@ public:
     uint32_t cyclesPassed;
     uint16_t getJumpAddress();
     std::shared_ptr<uint16_t> getReturnAddress();
+    static x86_8 mapR8(gbz80::r r);
+    static x86_16 mapR16(gbz80::rp rp);
 private:
     std::shared_ptr<uint16_t> returnAddress;
     bool stopHit;
@@ -35,14 +37,12 @@ private:
     std::vector<uint8_t>& output;
     uint16_t jumpAddress;
     void setSubFlag(bool flag);
-    x86_8 mapR8(gbz80::r r);
-    x86_16 mapR16(gbz80::rp rp);
-    void generateFlags();
+    void generateGBZ80FlagsFromX64();
     /*TODO: Implement GBZ instruction in x86 assembly.*/
     /* Source:
      * https://izik1.github.io/gbops/
     */
-    void importFlags();
+    void importGBZ80FlagsToX64();
     void decodeAndRun(uint8_t opcode);
     void decodeAndRunCB(uint8_t opcode);
     void nop();
