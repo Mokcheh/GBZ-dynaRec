@@ -343,12 +343,9 @@ void Translator::add_sp_e8()
 void Translator::ld_a_indirect_0xffn8()
 {
     const uint16_t address = 0xFF00 + bus.memory[blockProgramCounter++];
-    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
-    x64.lahf();
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data() + address;
     x64.movabsRBP(memoryAddress);
-    x64.arithmetic64r64imm(x86_64::RBP, address, ADD);
     x64.mov8mTo8r(mapR8(gbz80::A));
-    x64.sahf();
     cyclesPassed += 3;
 }
 
