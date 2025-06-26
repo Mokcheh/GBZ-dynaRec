@@ -1,39 +1,9 @@
-#include "bus.hpp"
-#include "dynarec.hpp"
-#include "translator.hpp"
-#include <array>
-#include <cstdint>
 #include <gtest/gtest.h>
 #include <ios>
 #include <vector>
-
-struct reg8{
-    char name;
-    gbz80::r index;
-};
-
-struct reg16{
-    char name[3];
-    gbz80::rp index;
-};
-
-constexpr std::array<reg8, 7> registers8 = {
-    reg8{'A', gbz80::A}, reg8{'B', gbz80::B},
-    reg8{'C', gbz80::C}, reg8{'D', gbz80::D},
-    reg8{'E', gbz80::E}, reg8{'H', gbz80::H}, 
-    reg8{'L', gbz80::L}
-};
-
-constexpr std::array<reg16, 4> registers16 = {
-    reg16{"BC", gbz80::BC}, reg16{"DE", gbz80::DE},
-    reg16{"HL", gbz80::HL}, reg16{"SP", gbz80::SP}
-};
-
-constexpr std::array<uint8_t, 7> u8 = {
-    0x1A, 0x82, 0xCA, 0x88, 0x26, 0x05, 0xEC
-};
-
-constexpr uint8_t initialFlags = 0xB0;
+#include "bus.hpp"
+#include "dynarec.hpp"
+#include "tester_boilerplate.hpp"
 
 TEST(LD, R8_U8){
     std::vector<uint8_t> testCode = {
@@ -144,4 +114,114 @@ TEST(LD, LDH_C_A){
     ASSERT_EQ(dynarec.getFlags(), initialFlags);
     ASSERT_EQ(dynarec.getRegister(Translator::mapR8(gbz80::A)), u8[2]);
     EXPECT_EQ(bus.memory.at(0xFF00 + u8[0]), u8[2]);
+}
+
+TEST(LD, LDH_A_C){
+    std::vector<uint8_t> testCode = {
+        0xF0, u8[0], // LD A, [0xFF00 + u8[0]]
+        0x10 // STOP
+    };
+    Bus bus(testCode);
+    bus.memory[0xFF00 + u8[0]] = u8[3];
+    dynaRec dynarec(bus);
+    dynarec.dispatch(0);
+    ASSERT_EQ(dynarec.getFlags(), initialFlags);
+    ASSERT_EQ(bus.memory.at(0xFF00 + u8[0]), u8[3]);
+    EXPECT_EQ(dynarec.getRegister(Translator::mapR8(gbz80::A)), u8[3]);
+}
+
+TEST(LD, LDD_HL_INDIRECT_A){
+    std::vector<uint8_t> testCode = {
+        0x21, 0x20, 0xA2, // LD HL, 0xA220
+        0x3E, u8[2],     //  LD A, u8[2]
+        0x32,           //   LD [HL-], A
+        0x10,          //    STOP 
+    };
+    Bus bus(testCode);
+    dynaRec dynarec(bus);
+    dynarec.dispatch(0);
+    ASSERT_EQ(dynarec.getFlags(), initialFlags);
+    EXPECT_EQ(dynarec.getRegister(Translator::mapR16(gbz80::HL)), 0xA220 - 1)
+    << "NO DECREMENT OCCURED AT HL = 0xA220";
+    EXPECT_EQ(bus.memory.at(0xA220), dynarec.getRegister(Translator::mapR8(gbz80::A)))
+    << "memory at 0xA220 (= " << bus.memory.at(0xA220) << ") != A ("
+    << dynarec.getRegister(Translator::mapR8(gbz80::A)) <<  ")";
+}
+
+TEST(LD, LDD_A_HL_INDIRECT){
+    const uint8_t val = u8[0];
+    std::vector<uint8_t> testCode = {
+        0x21, 0x20, 0xA2, // LD HL, 0xA220
+        0x3A,            //  LD A, [HL-]
+        0x10,           //   STOP
+    };
+    Bus bus(testCode);
+    bus.memory[0xA220] = val;
+    dynaRec dynarec(bus);
+    dynarec.dispatch(0);
+    ASSERT_EQ(dynarec.getFlags(), initialFlags);
+    EXPECT_EQ(dynarec.getRegister(Translator::mapR16(gbz80::HL)), 0xA220 - 1)
+    << "NO DECREMENT OCCURED AT HL = 0xA220";
+    EXPECT_EQ(bus.memory.at(0xA220), val)
+    << "memory at 0xA220 (= " << bus.memory.at(0xA220) << ") != " << val;
+    EXPECT_EQ(dynarec.getRegister(Translator::mapR8(gbz80::A)), val)
+    << "A (" << dynarec.getRegister(Translator::mapR8(gbz80::A)) << " != " << val;
+}
+
+TEST(LD, LDI_HL_INDIRECT_A){
+    std::vector<uint8_t> testCode = {
+        0x21, 0x20, 0xA2, // LD HL, 0xA220
+        0x3E, u8[2],     //  LD A, u8[2]
+        0x22,           //   LD (HL+), A
+        0x10           //    STOP
+    };
+
+    Bus bus(testCode);
+    dynaRec dynarec(bus);
+    dynarec.dispatch(0);
+    ASSERT_EQ(dynarec.getFlags(), initialFlags);
+    EXPECT_EQ(dynarec.getRegister(Translator::mapR16(gbz80::HL)), 0xA220 + 1)
+    << "NO INCREMENT OCCURED AT HL = 0xA220";
+    EXPECT_EQ(bus.memory.at(0xA220), dynarec.getRegister(Translator::mapR8(gbz80::A)))
+    << "memory at 0xA220 (= " << bus.memory.at(0xA220) << ") != A ("
+    << dynarec.getRegister(Translator::mapR8(gbz80::A)) <<  ")";
+}
+
+
+TEST(LD, LDI_A_HL_INDIRECT){
+    const uint8_t val = u8[0];
+    std::vector<uint8_t> testCode = {
+        0x21, 0x20, 0xA2, // LD HL, 0xA220
+        0x2A,            //  LD A, [HL-]
+        0x10,           //   STOP
+    };
+    Bus bus(testCode);
+    bus.memory[0xA220] = val;
+    dynaRec dynarec(bus);
+    dynarec.dispatch(0);
+    ASSERT_EQ(dynarec.getFlags(), initialFlags);
+    EXPECT_EQ(dynarec.getRegister(Translator::mapR16(gbz80::HL)), 0xA220 + 1)
+    << "NO INCREMENT OCCURED AT HL = 0xA220";
+    EXPECT_EQ(bus.memory.at(0xA220), val)
+    << "memory at 0xA220 (= " << bus.memory.at(0xA220) << ") != " << val;
+    EXPECT_EQ(dynarec.getRegister(Translator::mapR8(gbz80::A)), val)
+    << "A (" << dynarec.getRegister(Translator::mapR8(gbz80::A)) << " != " << val;
+}
+
+
+TEST(LD, A_R16_PTR){
+    constexpr uint16_t adr = u8[0] | (u8[1] << 8);
+    constexpr uint8_t val = 0xEA;
+    std::vector<uint8_t> testCode = {
+        0x01, adr & 0xFF, adr >> 8,// LD BC, 0x2CA2
+        0x0A,            //  LD A, [BC]
+        0x10            //   STOP
+    };
+    Bus bus(testCode);
+    bus.memory[adr] = val;
+    dynaRec dynarec(bus);
+    dynarec.dispatch(0);
+    ASSERT_EQ(dynarec.getFlags(), initialFlags);
+    ASSERT_EQ(dynarec.getRegister(Translator::mapR16(gbz80::BC)), adr);
+    EXPECT_EQ(dynarec.getRegister(Translator::mapR8(gbz80::A)), val);
 }
