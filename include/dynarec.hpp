@@ -54,3 +54,11 @@ private:
     uint32_t sizeRounded;
     uint32_t cycles;
 };
+
+enum class FLAG : uint8_t {
+    ALL_CLEAR = 0,
+    ZERO = 0b10000000,
+    SUB = 0b01000000,
+    HALFCARRY = 0b00100000,
+    CARRY = 0b00010000
+};
