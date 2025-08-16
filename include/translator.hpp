@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <x86_64Emitter.hpp>
 #include <bus.hpp>
 #include <memory>
@@ -68,6 +69,7 @@ private:
     void ldi_a_hl_indirect();
     void ldd_a_hl_indirect();
     void add_a(gbz80::r reg);
+    void add_a_hl_ptr();
     void adc_a(gbz80::r reg);
     void sub_a(gbz80::r reg);
     void sbc_a(gbz80::r reg);

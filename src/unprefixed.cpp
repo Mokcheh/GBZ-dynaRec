@@ -1,4 +1,6 @@
 #include "translator.hpp"
+#include "x86_64Emitter.hpp"
+#include <cstdint>
 
 
 
@@ -271,6 +273,21 @@ void Translator::add_a(gbz80::r src)
     x64.arithmetic8r8r(mapR8(gbz80::A), mapR8(src), ADD);
     cyclesPassed++;
     setSubFlag(0);
+}
+
+void Translator::add_a_hl_ptr()
+{
+    const uint64_t memoryAddress = (uint64_t)bus.memory.data();
+    setSubFlag(0);
+    x64.lahf();
+    x64.movabsRBP(memoryAddress);
+    x64.arithmetic64r64r(x86_64::RBP, x86_64(mapR16(gbz80::HL)), ADD);    
+    x64.push16r(x86_16::BX);
+    x64.mov8mTo8r(x86_8::BL);
+    x64.sahf();
+    x64.arithmetic8r8r(mapR8(gbz80::A), x86_8::BL, ADD);
+    x64.pop16r(x86_16::BX);
+    cyclesPassed+=2;
 }
 
 void Translator::adc_a(gbz80::r src)

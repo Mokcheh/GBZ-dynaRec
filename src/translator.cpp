@@ -203,7 +203,14 @@ void Translator::decodeAndRun(uint8_t opcode)
             ld_r_r(gbz80::r(y), gbz80::r(z));
     }break;
     case 2: switch(y){
-        case 0: add_a(gbz80::r(z)); break;
+        case 0: 
+        {
+            if(z == gbz80::HLptr)
+                add_a_hl_ptr();
+            else
+                add_a(gbz80::r(z)); 
+            break;
+        }
         case 1: adc_a(gbz80::r(z)); break;
         case 2: sub_a(gbz80::r(z)); break;
         case 3: sbc_a(gbz80::r(z)); break;
