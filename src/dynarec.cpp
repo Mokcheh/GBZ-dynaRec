@@ -23,7 +23,9 @@ dynaRec::dynaRec(Bus& bus) :
     bus(bus)
 {
     registerState.fill(0);
-    registerState[0] = 0xB0 << 8;
+    constexpr uint8_t flags = 0, stackPtr = 3;
+    registerState[flags] = 0xB0 << 8;
+    registerState[stackPtr] = 0xFFFE;
 }
 
 void Cache::setRuntimeReturnAddress(std::shared_ptr<uint16_t> adr)
