@@ -1,9 +1,7 @@
 #pragma once
-
-#include <cstdint>
-#include <x86_64Emitter.hpp>
-#include <bus.hpp>
 #include <memory>
+#include "x86_64Emitter.hpp"
+#include <bus.hpp>
 
 namespace gbz80{
     enum r : uint8_t{
@@ -27,11 +25,12 @@ public:
     uint16_t blockProgramCounter;
     uint32_t cyclesPassed;
     uint16_t getJumpAddress();
-    std::shared_ptr<uint16_t> getReturnAddress();
+    std::unique_ptr<uint16_t> transferOwnership();
+    bool isReturnSet();
     static x86_8 mapR8(gbz80::r r);
     static x86_16 mapR16(gbz80::rp rp);
 private:
-    std::shared_ptr<uint16_t> returnAddress;
+    std::unique_ptr<uint16_t> returnAddress;
     bool stopHit;
     x64Emitter x64;
     Bus& bus;

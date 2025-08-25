@@ -1,7 +1,7 @@
 #pragma once
 #include "x86_64Emitter.hpp"
 #include <unordered_map>
-#include <translator.hpp>
+#include "bus.hpp"
 #include <array>
 #include <vector>
 #include <cstdint>
@@ -44,10 +44,10 @@ public:
     uint32_t getCycleCount();
     uint16_t getJumpAddress();
     bool isJumpSet();
-    void setRuntimeReturnAddress(std::shared_ptr<uint16_t> adr);
+    void setRuntimeReturnAddress(std::unique_ptr<uint16_t> adr);
     void setJumpAddress(uint16_t adr);
 private:
-    std::shared_ptr<uint16_t> runtimeReturnAddress;
+    std::unique_ptr<uint16_t> runtimeReturnAddress;
     void* generateExecutableCode(const uint16_t* state);
     void* runX86;
     Address start, end, jump;

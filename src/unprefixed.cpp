@@ -1,6 +1,5 @@
 #include "translator.hpp"
 #include "x86_64Emitter.hpp"
-#include <cstdint>
 
 
 
@@ -384,7 +383,7 @@ void Translator::ret_cc(uint8_t cc)
 
 void Translator::ret()
 {
-    returnAddress = std::make_shared<uint16_t>();
+    returnAddress = std::make_unique<uint16_t>();
     x64.push16r(mapR16(gbz80::BC));
     pop_rp2(gbz80::rp2::BC);
 

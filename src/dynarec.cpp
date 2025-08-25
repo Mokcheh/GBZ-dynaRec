@@ -3,8 +3,9 @@
 #include <iostream>
 #include <cstring>
 #include <cmath>
-#include <dynarec.hpp>
+#include "dynarec.hpp"
 #include <vector>
+#include "translator.hpp"
 
 #ifdef __linux__
 #include <unistd.h>
@@ -28,9 +29,10 @@ dynaRec::dynaRec(Bus& bus) :
     registerState[stackPtr] = 0xFFFE;
 }
 
-void Cache::setRuntimeReturnAddress(std::shared_ptr<uint16_t> adr)
+
+void Cache::setRuntimeReturnAddress(std::unique_ptr<uint16_t> adr)
 {
-    runtimeReturnAddress = adr;
+    runtimeReturnAddress = std::move(adr);
 }
 
 uint8_t dynaRec::getRegister(x86_8 reg) const
@@ -104,8 +106,8 @@ void dynaRec::buildCache(Cache& cache, uint16_t targetStartingAddress)
     cache.setStartingAddress(targetStartingAddress);
     translator.translateBlock();
     cache.setEndingAddress(translator.blockProgramCounter);
-    if(translator.getReturnAddress() != nullptr)
-        cache.setRuntimeReturnAddress(translator.getReturnAddress());
+    if(translator.isReturnSet())
+        cache.setRuntimeReturnAddress(translator.transferOwnership());
     else if(translator.getJumpAddress() != 0xFFFF)
         cache.setJumpAddress(translator.getJumpAddress());
     cache.setCycleCount(translator.cyclesPassed);

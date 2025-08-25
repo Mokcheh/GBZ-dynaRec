@@ -1,6 +1,4 @@
-#include <cstdint>
-#include <translator.hpp>
-
+#include "translator.hpp"
 
 Translator::Translator(std::vector<uint8_t>& clientCache, uint16_t startingAddress, Bus& bus) :
     output(clientCache), bus(bus), x64(clientCache), stopHit(false),
@@ -31,9 +29,14 @@ uint16_t Translator::getJumpAddress()
     return jumpAddress;
 }
 
-std::shared_ptr<uint16_t> Translator::getReturnAddress()
+std::unique_ptr<uint16_t> Translator::transferOwnership()
 {
-    return returnAddress;
+    return std::move(this->returnAddress);
+}
+
+bool Translator::isReturnSet()
+{
+    return returnAddress != nullptr;
 }
 
 void Translator::setSubFlag(bool flag)
