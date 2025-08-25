@@ -122,10 +122,17 @@ Cache& dynaRec::getCache(uint16_t targetStartingAddress)
 
 void dynaRec::dispatch(uint16_t programCounter)
 {
-    Cache& current = getCache(programCounter);
-    current.run(registerState.data());
-    if(current.isJumpSet())
-        dispatch(current.getJumpAddress());
+    bool jumpOccured;
+    do {
+        jumpOccured = false;
+        Cache& current = getCache(programCounter);
+        current.run(registerState.data());
+        if(current.isJumpSet())
+        {
+            programCounter = current.getJumpAddress();
+            jumpOccured = true;
+        }
+    }while (jumpOccured);
 }
 
 std::vector<uint8_t> generateX64InitCode(const uint16_t* state){
