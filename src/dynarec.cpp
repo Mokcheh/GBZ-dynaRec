@@ -107,7 +107,7 @@ void dynaRec::buildCache(Cache& cache, uint16_t targetStartingAddress)
     translator.translateBlock();
     cache.setEndingAddress(translator.blockProgramCounter);
     if(translator.isReturnSet())
-        cache.setRuntimeReturnAddress(translator.transferOwnership());
+        cache.setRuntimeReturnAddress(translator.transferRuntimeReturnAddressOwnership());
     else if(translator.getJumpAddress() != 0xFFFF)
         cache.setJumpAddress(translator.getJumpAddress());
     cache.setCycleCount(translator.cyclesPassed);

@@ -29,7 +29,7 @@ uint16_t Translator::getJumpAddress()
     return jumpAddress;
 }
 
-std::unique_ptr<uint16_t> Translator::transferOwnership()
+std::unique_ptr<uint16_t> Translator::transferRuntimeReturnAddressOwnership()
 {
     return std::move(this->returnAddress);
 }

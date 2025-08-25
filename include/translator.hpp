@@ -25,7 +25,7 @@ public:
     uint16_t blockProgramCounter;
     uint32_t cyclesPassed;
     uint16_t getJumpAddress();
-    std::unique_ptr<uint16_t> transferOwnership();
+    std::unique_ptr<uint16_t> transferRuntimeReturnAddressOwnership();
     bool isReturnSet();
     static x86_8 mapR8(gbz80::r r);
     static x86_16 mapR16(gbz80::rp rp);
