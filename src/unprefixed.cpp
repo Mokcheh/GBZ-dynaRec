@@ -1,5 +1,7 @@
+#include "dynarec.hpp"
 #include "translator.hpp"
 #include "x86_64Emitter.hpp"
+#include <cstdint>
 
 
 
@@ -131,11 +133,43 @@ void Translator::rra()
     cyclesPassed++;
 }
 
-uint8_t adjustToBCD(uint8_t binary){
-    const uint8_t tens = binary / 10;
-    const uint8_t units = binary % 10;
-    const uint8_t bcd = (tens << 4) | units;
-    return bcd;
+uint16_t adjustToBCD(uint16_t AX){
+    uint8_t A = AX & 0xFF;
+    uint8_t flags = AX >> 8;
+    uint8_t adjustment = 0;
+    const bool halfCarry = (flags & static_cast<uint8_t>(FLAG::HALFCARRY)) != 0;
+    const bool carry = (flags & static_cast<uint8_t>(FLAG::CARRY)) != 0;   
+    const bool subtract = (flags & static_cast<uint8_t>(FLAG::SUB)) != 0;
+    if(subtract)
+    {
+        if(halfCarry)
+            adjustment += 0x06;
+        if(carry)
+            adjustment += 0x60;
+        A -= adjustment;
+    }
+    else 
+    {
+        if(halfCarry || ((A & 0xF) > 0x9))
+            adjustment += 0x06;
+        if(carry || A > 0x99)
+        {
+            adjustment += 0x60;
+            flags |= static_cast<uint8_t>(FLAG::CARRY);
+        }
+        else
+            flags &= ~static_cast<uint8_t>(FLAG::CARRY);
+            
+        A += adjustment;
+    }
+    flags &= ~static_cast<uint8_t>(FLAG::HALFCARRY);
+    if(A == 0)
+        flags |= static_cast<uint8_t>(FLAG::ZERO);
+    else
+        flags &= ~static_cast<uint8_t>(FLAG::ZERO);
+
+    AX = (flags << 8) | A;
+    return AX;
 }
 
 void Translator::daa()
@@ -145,12 +179,13 @@ void Translator::daa()
      * x86_64 doesn't support it for some odd reason.
      * Calling a C++ function is the cleanest way to achieve
      * the same result in my opinion.
+     * DI holds the emulated "N" (SUB) flag since x86_64 doesn't have such flag
     */
+    generateGBZ80FlagsFromX64();
     x64.__cdeclCallFunction((void*)&adjustToBCD, x86_16::AX);
-    x64.mov8rTo8stack(0, x86_8::AL);
-    x64.pop16r(x86_16::AX);
-    x64.arithmetic8r8imm(x86_8::AH, ~AF, AND);
-    x64.sahf();
+    // Discard old AX value as it isn't needed
+    x64.pop16r(x86_16::DI);
+    importGBZ80FlagsToX64();
     cyclesPassed++;
 }
 
@@ -313,8 +348,11 @@ void Translator::sbc_a(gbz80::r src)
 void Translator::and_a(gbz80::r reg)
 {
     x64.arithmetic8r8r(mapR8(gbz80::A), mapR8(reg), AND);
-    cyclesPassed++;
+    x64.lahf();
+    x64.arithmetic8r8imm(x86_8::AH, eflags::AF, OR);
     setSubFlag(0);
+    x64.sahf();
+    cyclesPassed++;
 }
 
 void Translator::xor_a(gbz80::r reg)
@@ -349,7 +387,6 @@ void Translator::ld_indirect_0xffn8_a()
 
 void Translator::add_sp_e8()
 {
-    //TODO: this instruction segfaults for some reason
     int8_t e8 = bus.memory.at(blockProgramCounter++);
     x64.arithmetic16r16imm(mapR16(gbz80::SP), e8, ADD);
     setSubFlag(0);
@@ -580,6 +617,9 @@ void Translator::and_a_imm()
 {
     const uint8_t imm8 = bus.memory.at(blockProgramCounter++);
     x64.arithmetic8r8imm(mapR8(gbz80::A), imm8, AND);
+    x64.lahf();
+    x64.arithmetic8r8imm(x86_8::AH, eflags::AF, OR);
+    x64.sahf();
     setSubFlag(0);
     cyclesPassed += 2;
 }
